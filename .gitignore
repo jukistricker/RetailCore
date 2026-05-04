@@ -1,0 +1,51 @@
+# ==========================================
+# .NET / Visual Studio / Rider
+# ==========================================
+bin/
+obj/
+out/
+.vs/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+.vscode/
+
+# Rider / JetBrains specific
+.idea/
+*.sln.iml
+
+# ==========================================
+# React / Vite / Node.js
+# ==========================================
+node_modules/
+dist/
+dist-ssr/
+*.local
+.eslintcache
+.stylelintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ==========================================
+# Databases & Persistence
+# ==========================================
+*.db
+*.db-shm
+*.db-wal
+
+# SQL Server localDB
+*.mdf
+*.ldf
+
+# ==========================================
+# OS & Miscellaneous
+# ==========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.bak
+*.tmp
