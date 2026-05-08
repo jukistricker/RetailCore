@@ -1,6 +1,6 @@
 using System;
 
-namespace RetailCore.Shared.Entities;
+namespace RetailCore.Domain.Entities;
 
 public class Customer: BaseEntity
 {

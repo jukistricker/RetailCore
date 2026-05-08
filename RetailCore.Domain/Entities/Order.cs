@@ -1,7 +1,7 @@
 using System;
-using RetailCore.Shared.Enums;
+using RetailCore.Domain.Enums;
 
-namespace RetailCore.Shared.Entities;
+namespace RetailCore.Domain.Entities;
 
 public class Order: BaseEntity
 {

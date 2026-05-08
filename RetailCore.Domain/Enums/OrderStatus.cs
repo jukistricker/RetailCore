@@ -1,4 +1,4 @@
-namespace RetailCore.Shared.Enums;
+namespace RetailCore.Domain.Enums;
 
 public enum OrderStatus
 {
