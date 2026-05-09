@@ -6,4 +6,14 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\RetailCore.Domain\RetailCore.Domain.csproj" />
+      <ProjectReference Include="..\RetailCore.Infrastructure\RetailCore.Infrastructure.csproj" />
+      <ProjectReference Include="..\RetailCore.Shared\RetailCore.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Mappings\" />
+    </ItemGroup>
+
 </Project>

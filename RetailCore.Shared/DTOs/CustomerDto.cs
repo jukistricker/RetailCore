@@ -1,6 +1,6 @@
 using System;
 
-namespace RetailCore.Shared.DTOs.Customer;
+namespace RetailCore.Shared.DTOs;
 
 public class CustomerDto
 {
@@ -11,5 +11,5 @@ public class CustomerDto
     public string? Address { get; set; }
     public string? City { get; set; }
     public bool IsActive { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

@@ -42,7 +42,7 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.Note)
             .HasMaxLength(500);
 
-        builder.Property(o => o.CreatedAt)
+        builder.Property(o => o.CreatedDate)
             .IsRequired();
 
         builder.Property(o => o.CreatedBy)

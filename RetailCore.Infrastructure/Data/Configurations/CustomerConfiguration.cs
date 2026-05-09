@@ -39,7 +39,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(c => c.CreatedAt)
+        builder.Property(c => c.CreatedDate)
             .IsRequired();
 
         builder.Property(c => c.CreatedBy)

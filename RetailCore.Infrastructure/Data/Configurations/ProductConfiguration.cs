@@ -51,7 +51,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(p => p.CreatedAt)
+        builder.Property(p => p.CreatedDate)
             .IsRequired();
 
         builder.Property(p => p.CreatedBy)

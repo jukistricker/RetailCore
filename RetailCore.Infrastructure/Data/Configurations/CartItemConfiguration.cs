@@ -16,10 +16,10 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
         builder.Property(ci => ci.Quantity)
             .IsRequired()
             .HasDefaultValue(1);
-        
+
         builder.ToTable(t => t.HasCheckConstraint("CK_CartItems_Quantity", "Quantity > 0"));
 
-        builder.Property(ci => ci.CreatedAt)
+        builder.Property(ci => ci.CreatedDate)
             .IsRequired();
 
         builder.Property(ci => ci.CreatedBy)

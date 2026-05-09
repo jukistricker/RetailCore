@@ -24,7 +24,6 @@ public class AppDbContext : IdentityDbContext<IdentityUser<Guid>, IdentityRole<G
     {
         base.OnModelCreating(builder); 
 
-        // Apply configurations
         builder.ApplyConfiguration(new CategoryConfiguration());
         builder.ApplyConfiguration(new ProductConfiguration());
         builder.ApplyConfiguration(new ProductImageConfiguration());

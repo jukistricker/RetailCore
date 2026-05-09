@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace RetailCore.Shared.DTOs.Product;
+namespace RetailCore.Shared.DTOs;
 
 public class ProductDto
 {

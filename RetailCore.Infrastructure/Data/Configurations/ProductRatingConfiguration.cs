@@ -21,7 +21,7 @@ public class ProductRatingConfiguration : IEntityTypeConfiguration<ProductRating
         builder.Property(pr => pr.Review)
             .HasMaxLength(1000);
 
-        builder.Property(pr => pr.CreatedAt)
+        builder.Property(pr => pr.CreatedDate)
             .IsRequired();
 
         builder.Property(pr => pr.CreatedBy)

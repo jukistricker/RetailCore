@@ -1,4 +1,4 @@
-namespace RetailCore.Shared.DTOs.Category;
+namespace RetailCore.Shared.DTOs;
 
 public class CategoryDto
 {

@@ -24,7 +24,7 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(pi => pi.CreatedAt)
+        builder.Property(pi => pi.CreatedDate)
             .IsRequired();
 
         builder.Property(pi => pi.CreatedBy)

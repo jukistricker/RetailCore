@@ -30,7 +30,7 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
             .IsRequired()
             .HasColumnType("decimal(18,2)");
 
-        builder.Property(oi => oi.CreatedAt)
+        builder.Property(oi => oi.CreatedDate)
             .IsRequired();
 
         builder.Property(oi => oi.CreatedBy)

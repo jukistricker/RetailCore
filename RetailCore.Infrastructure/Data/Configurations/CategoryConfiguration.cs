@@ -29,7 +29,7 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
             .IsRequired()
             .HasDefaultValue(0);
 
-        builder.Property(c => c.CreatedAt)
+        builder.Property(c => c.CreatedDate)
             .IsRequired();
 
         builder.Property(c => c.CreatedBy)

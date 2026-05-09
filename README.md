@@ -6,3 +6,8 @@ dotnet ef migrations add InitialCreate \
 --output-dir Data/Migrations
 ```
 
+```bash
+dotnet ef database update \
+--project RetailCore.Infrastructure \
+--startup-project RetailCore.API
+```
