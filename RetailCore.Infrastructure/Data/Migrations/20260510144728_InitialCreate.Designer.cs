@@ -12,7 +12,7 @@ using RetailCore.Infrastructure.Data;
 namespace RetailCore.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260508093347_InitialCreate")]
+    [Migration("20260510144728_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -283,11 +283,6 @@ namespace RetailCore.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -2,9 +2,9 @@ namespace RetailCore.Application.UseCases.Interfaces;
 
 public interface ICategoryService
 {
-    Task<IEnumerable<CategoryResponse>> GetAllAsync();
-    Task<CategoryResponse?> GetByIdAsync(Guid id);
-    Task<Guid> CreateAsync(CreateCategoryRequest request);
-    Task<bool> UpdateAsync(Guid id, UpdateCategoryRequest request);
-    Task<bool> DeleteAsync(Guid id);
+    Task<Result<IEnumerable<CategoryResponse>>> GetAllAsync();
+    Task<Result<CategoryResponse?>> GetByIdAsync(Guid id);
+    Task<Result<Guid>> CreateAsync(CreateCategoryRequest request);
+    Task<Result<bool>> UpdateAsync(Guid id, UpdateCategoryRequest request);
+    Task<Result<bool>> DeleteAsync(Guid id);
 }

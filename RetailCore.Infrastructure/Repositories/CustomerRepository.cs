@@ -2,7 +2,7 @@ namespace RetailCore.Infrastructure.Repositories;
 
 public class CustomerRepository : Repository<Customer>, ICustomerRepository
 {
-    public CustomerRepository(AppDbContext context) : base(context) { }
+    public CustomerRepository(AppDbContext dbContext) : base(dbContext) { }
 
     public async Task<Customer?> GetByUserIdAsync(Guid userId)
     {

@@ -12,8 +12,4 @@
       <ProjectReference Include="..\RetailCore.Shared\RetailCore.Shared.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Mappings\" />
-    </ItemGroup>
-
 </Project>

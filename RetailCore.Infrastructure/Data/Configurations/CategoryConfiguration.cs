@@ -21,10 +21,6 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(c => c.Description)
             .HasMaxLength(500);
 
-        builder.Property(c => c.IsActive)
-            .IsRequired()
-            .HasDefaultValue(true);
-
         builder.Property(c => c.SortOrder)
             .IsRequired()
             .HasDefaultValue(0);
