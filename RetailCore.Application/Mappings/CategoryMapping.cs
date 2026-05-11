@@ -1,6 +1,6 @@
 namespace RetailCore.Application.Mappings;
 
-public class CategoryMapping
+public static class CategoryMapping
 {
     public static Category ToEntityCreate(CreateCategoryRequest categoryRequest)
     {
@@ -13,17 +13,13 @@ public class CategoryMapping
         };
     }
 
-    public static Category ToEntityUpdate(Guid id, UpdateCategoryRequest categoryRequest)
+    public static void ToEntityUpdate(Category category, UpdateCategoryRequest categoryRequest, Guid userId)
     {
-        return new Category
-        {
-            Id = id,
-            Name = categoryRequest.Name,
-            Description = categoryRequest.Description,
-            SortOrder = categoryRequest.SortOrder,
-            // UpdatedBy = categoryRequest.,
-            UpdatedDate = DateTime.Now,
-        };
+        category.Name = categoryRequest.Name;
+        category.Description = categoryRequest.Description;
+        category.SortOrder = categoryRequest.SortOrder;
+        category.UpdatedDate = DateTime.Now;
+        category.UpdatedBy = userId;
     }
 
     public static CategoryResponse ToResponse(Category category)
@@ -41,13 +37,14 @@ public class CategoryMapping
         };
     }
 
-    public static IEnumerable<CategoryResponse> ToResponses(IEnumerable<Category> categories)
+    public static PagingResponse<CategoryResponse> ToPagingResponse(PagingResponse<Category> pagingResponse)
     {
-        List<CategoryResponse> categoryResponses = new List<CategoryResponse>();
-        foreach (var category in categories)
+        return new PagingResponse<CategoryResponse>
         {
-            categoryResponses.Add(ToResponse(category));
-        }
-        return categoryResponses;
+            Items = pagingResponse.Items.Select(x=> ToResponse(x)).ToList(),
+            TotalCount = pagingResponse.TotalCount,
+            PageNumber = pagingResponse.PageNumber,
+            PageSize = pagingResponse.PageSize
+        };
     }
 }

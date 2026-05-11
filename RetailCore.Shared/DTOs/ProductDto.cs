@@ -1,42 +1,33 @@
+using System;
 using System.Collections.Generic;
 
 namespace RetailCore.Shared.DTOs;
 
-public class ProductDto
+public class ProductSummaryResponse
 {
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Slug { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
+    public decimal Price { get; set; }
+    public string? ThumbnailUrl { get; set; }
+    public string CategoryName { get; set; }
+}
+    
+public record ProductDetailResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; }
+    public string Slug { get; set; }
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public int Stock { get; set; }
-    public int CategoryId { get; set; }
-    public string? CategoryName { get; set; }
-    public string? ThumbnailUrl { get; set; }
-    public bool IsFeatured { get; set; }
-    public bool IsActive { get; set; }
-    public List<string> ImageUrls { get; set; } = [];
+    public string CategoryName { get; set; }
+    public List<ProductImageResponse> Images { get; set; }
 }
 
-public class CreateProductDto
+public record ProductImageResponse
 {
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public decimal Price { get; set; }
-    public int Stock { get; set; }
-    public int CategoryId { get; set; }
-    public string? ThumbnailUrl { get; set; }
-    public bool IsFeatured { get; set; } = false;
-}
-
-public class UpdateProductDto
-{
-    public string Name { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public decimal Price { get; set; }
-    public int Stock { get; set; }
-    public int CategoryId { get; set; }
-    public string? ThumbnailUrl { get; set; }
-    public bool IsFeatured { get; set; }
-    public bool IsActive { get; set; }
+    public Guid Id { get; set; }
+    public string Url { get; set; }
+    public string? AltText { get; set; }
 }

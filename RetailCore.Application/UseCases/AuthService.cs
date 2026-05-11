@@ -1,11 +1,7 @@
-
-
-using System.Net;
 using Duende.IdentityModel.Client;
 using Duende.IdentityServer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using RetailCore.Infrastructure.Data;
 using RetailCore.Infrastructure.Identity;
 
 namespace RetailCore.Application.UseCases;
@@ -21,6 +17,7 @@ public class AuthService : IAuthService
     private readonly HttpClient _httpClient;
     private readonly IdentityServerOptions _identityOptions;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IValidator<RegisterRequest> _registerRequestValidator;
 
     public AuthService(
         UserManager<IdentityUser<Guid>> userManager,
@@ -28,7 +25,8 @@ public class AuthService : IAuthService
         AppDbContext dbContext,
         HttpClient httpClient, 
         IOptions<IdentityServerOptions> identityOptions,
-        IHttpContextAccessor httpContextAccessor) 
+        IHttpContextAccessor httpContextAccessor,
+        IValidator<RegisterRequest> registerRequestValidator) 
     {
         _userManager = userManager;
         _customerRepository = customerRepository;
@@ -36,6 +34,7 @@ public class AuthService : IAuthService
         _httpClient = httpClient;
         _identityOptions = identityOptions.Value;
         _httpContextAccessor = httpContextAccessor;
+        _registerRequestValidator = registerRequestValidator;
     }
 
     public async Task<Result<LoginResponse>> LoginAsync(LoginRequest request)
@@ -54,7 +53,10 @@ public class AuthService : IAuthService
             ClientSecret = _identityOptions.AdminSecret,
             UserName = request.Email,
             Password = request.Password,
-            Scope = $"{IdentityServerConstants.StandardScopes.OpenId} {IdentityServerConstants.StandardScopes.Profile} {_identityOptions.ApiScopeName}"
+            Scope = $"{IdentityServerConstants.StandardScopes.OpenId} " +
+                    $"{IdentityServerConstants.StandardScopes.Profile} " +
+                    $"{IdentityServerConstants.StandardScopes.OfflineAccess} " +
+                    $"{_identityOptions.ApiScopeName}"
         });
 
         if (tokenResponse.IsError) 
@@ -64,8 +66,8 @@ public class AuthService : IAuthService
         var accessTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
         };
 
@@ -73,8 +75,8 @@ public class AuthService : IAuthService
         var refreshTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = false,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7) 
         };
 
@@ -91,8 +93,14 @@ public class AuthService : IAuthService
 
     public async Task<Result<bool>> RegisterAsync(RegisterRequest request)
     {
+        var validationResult = await _registerRequestValidator.ValidateAsync(request);
+        
+        if (!validationResult.IsValid)
+        {
+            return Result<bool>.Failure(validationResult.Errors.Select(e => e.ErrorMessage).ToList());
+        }
         var isUnique = await _customerRepository.IsEmailUniqueAsync(request.Email);
-        if (!isUnique) return Result<bool>.Failure("Email already exists");
+        if (!isUnique) return Result<bool>.Failure( "Email already exists" );
 
         using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
@@ -127,23 +135,26 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<Result<bool>> LogoutAsync(string refreshToken)
+    public async Task<Result<bool>> LogoutAsync()
     {
-        if (string.IsNullOrEmpty(refreshToken)) 
-            return Result<bool>.Failure("Refresh token is required", 400);
+        var response = _httpContextAccessor.HttpContext?.Response;
 
-        var disco = await _httpClient.GetDiscoveryDocumentAsync(_identityOptions.Authority);
-        if (disco.IsError) return Result<bool>.Failure("Identity Server is unavailable", 500);
-
-        await _httpClient.RevokeTokenAsync(new TokenRevocationRequest
+        response.Cookies.Delete("X-Access-Token", new CookieOptions
         {
-            Address = disco.RevocationEndpoint,
-            ClientId = _identityOptions.AdminClientId,
-            ClientSecret = _identityOptions.AdminSecret,
-            Token = refreshToken,
-            TokenTypeHint = "refresh_token"
+            HttpOnly = true,
+            Secure = false, 
+            SameSite = SameSiteMode.Lax
         });
-        
-        return Result<bool>.Success(true, 204);
+
+        response.Cookies.Delete("X-Refresh-Token", new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false,
+            SameSite = SameSiteMode.Lax
+        });
+
+        response.Cookies.Delete("XSRF-TOKEN");
+
+        return Result<bool>.Success(true);
     }
 }

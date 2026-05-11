@@ -1,8 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using RetailCore.Application.Validators.Auth;
 using RetailCore.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,23 +54,32 @@ builder.Services.AddOpenApi(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-var identityOptions = builder.Configuration
-    .GetSection("IdentityConfig")
-    .Get<IdentityServerOptions>();
+builder.Services.AddIdentity<IdentityUser<Guid>, IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+var identityConfigSection = builder.Configuration.GetSection("IdentityConfig");
+var identityOptions = identityConfigSection.Get<IdentityServerOptions>();
+
+builder.Services.AddIdentityServer(options =>
+    {
+        // Dùng HTTP
+        options.IssuerUri = identityOptions.Authority; 
+    })
+    .AddInMemoryClients(IdentityConfiguration.GetClients(identityOptions))
+    .AddInMemoryApiScopes(IdentityConfiguration.GetApiScopes(identityOptions)) 
+    .AddInMemoryIdentityResources(IdentityConfiguration.IdentityResources)
+    .AddAspNetIdentity<IdentityUser<Guid>>(); 
+
+builder.Services.Configure<IdentityServerOptions>(identityConfigSection);
+
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-
-builder.Services.AddIdentityServer()
-    .AddInMemoryClients(IdentityConfiguration.GetClients(identityOptions))
-    .AddInMemoryApiScopes(IdentityConfiguration.GetApiScopes(identityOptions)) 
-    .AddInMemoryIdentityResources(IdentityConfiguration.IdentityResources);
-
-builder.Services.AddIdentity<IdentityUser<Guid>, IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -78,6 +89,7 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer(options =>
     {
         options.Authority = identityOptions.Authority;
+        options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateAudience = false
@@ -122,6 +134,9 @@ app.Use((context, next) =>
     return next(context);
 });
 
+app.UseHttpsRedirection();
+app.UseIdentityServer();
+
 app.UseAuthentication(); 
 app.UseAuthorization();
 
@@ -145,22 +160,21 @@ using (var scope = app.Services.CreateScope())
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi(); // Vẫn giữ dòng này để sinh file json
+    app.MapOpenApi(); //sinh file json
     
     app.UseSwaggerUI(options =>
     {
         // Trỏ vào file json mà Microsoft.AspNetCore.OpenApi sinh ra
         options.SwaggerEndpoint("/openapi/v1.json", "Retail Core API v1");
         
-        // Đường dẫn mặc định sẽ là /swagger
         options.RoutePrefix = "swagger";
         
-        // Quan trọng cho dân Cyber: Cho phép gửi Cookie đi kèm request test
+        // Cho phép gửi Cookie đi kèm request test
         options.ConfigObject.AdditionalItems["withCredentials"] = true;
     });
 }
 
-app.UseHttpsRedirection();
+
 app.MapControllers();
 
 app.Run();

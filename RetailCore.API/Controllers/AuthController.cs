@@ -11,7 +11,7 @@ public class AuthController : ApiControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
+    public async Task<IActionResult> Login([FromBody]LoginRequest request)
     {
         Result<LoginResponse> result = await _authService.LoginAsync(request);
         return HandleResult(result); 
@@ -26,8 +26,8 @@ public class AuthController : ApiControllerBase
 
     [Authorize]
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] string refreshToken)
+    public async Task<IActionResult> Logout()
     {
-        return HandleResult(await _authService.LogoutAsync(refreshToken));
+        return HandleResult(await _authService.LogoutAsync());
     }
 }

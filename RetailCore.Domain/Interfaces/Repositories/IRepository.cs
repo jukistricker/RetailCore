@@ -1,7 +1,10 @@
+using RetailCore.Shared.DTOs;
+
 namespace RetailCore.Domain.Interfaces.Repositories;
 
 public interface IRepository<T> where T : class
 {
+    Task<PagingResponse<T>> GetByPageAsync(PagingRequest request);
     Task<IEnumerable<T>> GetAllAsync();
     Task<T?> GetByIdAsync(object id);
     Task AddAsync(T entity);

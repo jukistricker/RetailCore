@@ -1,3 +1,5 @@
+using RetailCore.Shared.DTOs;
+
 namespace RetailCore.Infrastructure.Repositories;
 
 public class Repository<T> : IRepository<T> where T : class
@@ -11,18 +13,29 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(int page = 1, int size = 10, bool desc = true)
+    public async Task<PagingResponse<T>> GetByPageAsync(PagingRequest request)
     {
-        var query = _dbSet.AsNoTracking(); 
+        var query = _dbSet.AsNoTracking();
 
-        query = desc 
-            ? query.OrderByDescending(x => EF.Property<Guid>(x, "Id"))
-            : query.OrderBy(x => EF.Property<Guid>(x, "Id"));
+        int totalCount = await query.CountAsync();
 
-        return await query
-            .Skip((page - 1) * size)
-            .Take(size)
+        string sortBy = request.SortBy ?? "Id";
+        query = request.IsDescending 
+            ? query.OrderByDescending(x => EF.Property<object>(x, sortBy)) 
+            : query.OrderBy(x => EF.Property<object>(x, sortBy));
+
+        var items = await query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync();
+
+        return new PagingResponse<T>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
     }
 
     public async Task<IEnumerable<T>> GetAllAsync() 

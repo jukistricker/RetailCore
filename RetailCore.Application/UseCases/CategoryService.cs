@@ -1,48 +1,82 @@
+using Microsoft.AspNetCore.Http;
+using RetailCore.Application.Extensions;
 using RetailCore.Application.Mappings;
 
 namespace RetailCore.Application.UseCases;
 
-public class CategoryService: ICategoryService
+public class CategoryService : ICategoryService
 {
-    private readonly  ICategoryRepository _categoryRepository;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CategoryService(ICategoryRepository categoryRepository)
+    public CategoryService(
+        ICategoryRepository categoryRepository,
+        IProductRepository productRepository,
+        IHttpContextAccessor httpContextAccessor
+        )
     {
         _categoryRepository = categoryRepository;
-    }
-    
-    
-    public async Task<Result<IEnumerable<CategoryResponse>>> GetAllAsync()
-    {
-        IEnumerable<Category> categories = await _categoryRepository.GetAllAsync();
-        return Result<IEnumerable<CategoryResponse>>.Success(CategoryMapping.ToResponses(categories));
+        _productRepository = productRepository;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<Result<CategoryResponse>?> GetByIdAsync(Guid id)
+    public async Task<Result<PagingResponse<CategoryResponse>>> GetByPageAsync(PagingRequest request)
     {
-        Category category = await _categoryRepository.GetByIdAsync(id);
+        PagingResponse<Category> categories = await _categoryRepository.GetByPageAsync(request);
+        return Result<PagingResponse<CategoryResponse>>.Success(CategoryMapping.ToPagingResponse(categories));
+    }
+
+    public async Task<Result<CategoryResponse>> GetByIdAsync(Guid id)
+    {
+        var category = await _categoryRepository.GetByIdAsync(id);
         if (category == null)
         {
-            Result<CategoryResponse?>.Failure("Category not found");
+            return Result<CategoryResponse>.Failure("Category not found");
         }
         return Result<CategoryResponse>.Success(CategoryMapping.ToResponse(category));
     }
 
     public async Task<Result<Guid>> CreateAsync(CreateCategoryRequest request)
     {
-        Category category = CategoryMapping.ToEntityCreate(request);
+        var category = CategoryMapping.ToEntityCreate(request);
         await _categoryRepository.AddAsync(category);
         await _categoryRepository.SaveChangesAsync();
         return Result<Guid>.Success(category.Id);
     }
 
-    public Task<Result<bool>> UpdateAsync(Guid id, UpdateCategoryRequest request)
+    public async Task<Result<bool>> UpdateAsync(Guid id, UpdateCategoryRequest request)
     {
-        throw new NotImplementedException();
+        Category category = await _categoryRepository.GetByIdAsync(id);
+        if (category == null)
+        {
+            return Result<bool>.Failure("Category not found");
+        }
+        Guid userId = _httpContextAccessor.HttpContext.User.GetUserId(); 
+        CategoryMapping.ToEntityUpdate(category, request, userId);
+        
+        _categoryRepository.Update(category); 
+        await _categoryRepository.SaveChangesAsync();
+        
+        return Result<bool>.Success(true);
     }
 
-    public Task<Result<bool>> DeleteAsync(Guid id)
+    public async Task<Result<bool>> DeleteAsync(Guid id)
     {
-        throw new NotImplementedException();
+        Category category = await _categoryRepository.GetByIdAsync(id);
+        if (category == null)
+        {
+            return Result<bool>.Failure("Category not found to delete");
+        }
+
+        if (await _productRepository.ExistsByCategoryIdAsync(id))
+        {
+            return Result<bool>.Failure("Category has products");
+        }
+        
+        _categoryRepository.Delete(category);
+        await _categoryRepository.SaveChangesAsync();
+        
+        return Result<bool>.Success(true);
     }
 }
