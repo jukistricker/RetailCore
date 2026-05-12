@@ -15,18 +15,18 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.Name)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(100);
 
         builder.Property(p => p.Slug)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasMaxLength(100);
 
         builder.HasIndex(p => p.Slug)
             .IsUnique()
             .HasDatabaseName("UQ_Products_Slug");
 
         builder.Property(p => p.Description)
-            .HasMaxLength(4000);
+            .HasMaxLength(1000);
 
         builder.Property(p => p.Price)
             .IsRequired()
@@ -58,10 +58,9 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .IsRequired();
 
         // FK -> Categories
-        builder.HasOne<Category>()
-            .WithMany()
-            .HasForeignKey(p => p.CategoryId)
-            .IsRequired()
+        builder.HasOne(x => x.Category)
+            .WithMany(x => x.Products)
+            .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(p => p.CategoryId)

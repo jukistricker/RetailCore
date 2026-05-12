@@ -31,4 +31,8 @@
       <ProjectReference Include="..\RetailCore.Infrastructure\RetailCore.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="wwwroot\user-content\products\" />
+    </ItemGroup>
+
 </Project>

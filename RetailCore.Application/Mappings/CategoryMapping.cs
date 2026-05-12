@@ -2,7 +2,7 @@ namespace RetailCore.Application.Mappings;
 
 public static class CategoryMapping
 {
-    public static Category ToEntityCreate(CreateCategoryRequest categoryRequest)
+    public static Category ToEntityCreate(CreateCategoryRequest categoryRequest, Guid userId)
     {
         return new Category
         {
@@ -10,6 +10,8 @@ public static class CategoryMapping
             Name = categoryRequest.Name,
             Description = categoryRequest.Description,
             SortOrder =  categoryRequest.SortOrder,
+            CreatedBy = userId,
+            CreatedDate = DateTime.Now,
         };
     }
 

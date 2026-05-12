@@ -1,11 +1,13 @@
+using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using RetailCore.API.Middlewares;
 using RetailCore.Application.Validators.Auth;
-using RetailCore.Infrastructure.Identity;
+using RetailCore.Infrastructure.Data.Configurations.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +52,7 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -64,12 +67,14 @@ var identityOptions = identityConfigSection.Get<IdentityServerOptions>();
 builder.Services.AddIdentityServer(options =>
     {
         // Dùng HTTP
-        options.IssuerUri = identityOptions.Authority; 
+        options.IssuerUri = identityOptions.Authority;
     })
     .AddInMemoryClients(IdentityConfiguration.GetClients(identityOptions))
-    .AddInMemoryApiScopes(IdentityConfiguration.GetApiScopes(identityOptions)) 
+    .AddInMemoryApiScopes(IdentityConfiguration.GetApiScopes(identityOptions))
+    .AddInMemoryApiResources(IdentityConfiguration.GetApiResources(identityOptions))
     .AddInMemoryIdentityResources(IdentityConfiguration.IdentityResources)
-    .AddAspNetIdentity<IdentityUser<Guid>>(); 
+    .AddAspNetIdentity<IdentityUser<Guid>>()
+    .AddProfileService<ProfileService>();;
 
 builder.Services.Configure<IdentityServerOptions>(identityConfigSection);
 
@@ -77,9 +82,13 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>()
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IStorageService, FileStorageService>();
 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -90,11 +99,12 @@ builder.Services.AddAuthentication(options =>
     {
         options.Authority = identityOptions.Authority;
         options.RequireHttpsMetadata = false;
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
-            ValidateAudience = false
+            ValidateAudience = false,
+            RoleClaimType = "role"
         };
-
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -121,7 +131,13 @@ builder.Services.AddAntiforgery(options =>
 });
 builder.Services.AddControllers();
 
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+
 var app = builder.Build();
+
+app.UseStaticFiles();
 
 app.Use((context, next) =>
 {
@@ -174,6 +190,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseExceptionHandler();
 
 app.MapControllers();
 

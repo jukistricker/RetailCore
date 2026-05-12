@@ -11,14 +11,15 @@ public class AppDbContext : IdentityDbContext<IdentityUser<Guid>, IdentityRole<G
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    public DbSet<Category>      Categories     => Set<Category>();
-    public DbSet<Product>       Products       => Set<Product>();
-    public DbSet<ProductImage>  ProductImages  => Set<ProductImage>();
-    public DbSet<Customer>      Customers      => Set<Customer>();
-    public DbSet<Order>         Orders         => Set<Order>();
-    public DbSet<OrderItem>     OrderItems     => Set<OrderItem>();
-    public DbSet<CartItem>      CartItems      => Set<CartItem>();
-    public DbSet<ProductRating> ProductRatings => Set<ProductRating>();
+    public DbSet<Category>         Categories     => Set<Category>();
+    public DbSet<Product>          Products       => Set<Product>();
+    public DbSet<ProductImage>     ProductImages  => Set<ProductImage>();
+    public DbSet<Customer>         Customers      => Set<Customer>();
+    public DbSet<Order>            Orders         => Set<Order>();
+    public DbSet<OrderItem>        OrderItems     => Set<OrderItem>();
+    public DbSet<CartItem>         CartItems      => Set<CartItem>();
+    public DbSet<ProductRating>    ProductRatings => Set<ProductRating>();
+    public DbSet<ProductAttribute> ProductAttributes => Set<ProductAttribute>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -32,6 +33,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser<Guid>, IdentityRole<G
         builder.ApplyConfiguration(new OrderItemConfiguration());
         builder.ApplyConfiguration(new CartItemConfiguration());
         builder.ApplyConfiguration(new ProductRatingConfiguration());
+        builder.ApplyConfiguration(new ProductAttributeConfiguration());
 
     }
     

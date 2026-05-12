@@ -1,4 +1,4 @@
-namespace RetailCore.Infrastructure.Identity;
+namespace RetailCore.Infrastructure.Data.Configurations.Identity;
 
 public class IdentityServerOptions
 {

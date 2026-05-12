@@ -30,9 +30,9 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
         builder.Property(pi => pi.CreatedBy)
             .IsRequired();
 
-        // FK → Products
+        // FK -> Products
         builder.HasOne<Product>()
-            .WithMany()
+            .WithMany(p=>p.ProductImages)
             .HasForeignKey(pi => pi.ProductId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);

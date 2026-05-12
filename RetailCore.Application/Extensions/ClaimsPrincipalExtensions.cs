@@ -4,9 +4,11 @@ namespace RetailCore.Application.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    public static Guid GetUserId(this ClaimsPrincipal user)
+    public static Guid GetCustomerId(this ClaimsPrincipal user)
     {
-        var value = user.FindFirstValue(ClaimTypes.NameIdentifier);
+        string? value = user.FindFirst("customer_id")?.Value 
+                        ?? user.FindFirst("sub")?.Value;
+    
         return Guid.TryParse(value, out Guid result) ? result : Guid.Empty;
     }
 }

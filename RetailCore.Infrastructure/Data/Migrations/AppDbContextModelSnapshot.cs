@@ -487,8 +487,8 @@ namespace RetailCore.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -502,16 +502,16 @@ namespace RetailCore.Infrastructure.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("Stock")
                         .ValueGeneratedOnAdd()
@@ -547,6 +547,55 @@ namespace RetailCore.Infrastructure.Data.Migrations
 
                             t.HasCheckConstraint("CK_Products_Stock", "Stock >= 0");
                         });
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.ProductAttribute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AttributeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ParentValueId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("PriceAdjustment")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("Stock")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentValueId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductAttributes", (string)null);
                 });
 
             modelBuilder.Entity("RetailCore.Domain.Entities.ProductImage", b =>
@@ -740,17 +789,37 @@ namespace RetailCore.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RetailCore.Domain.Entities.Product", b =>
                 {
-                    b.HasOne("RetailCore.Domain.Entities.Category", null)
-                        .WithMany()
+                    b.HasOne("RetailCore.Domain.Entities.Category", "Category")
+                        .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.ProductAttribute", b =>
+                {
+                    b.HasOne("RetailCore.Domain.Entities.ProductAttribute", "ParentValue")
+                        .WithMany("ChildValues")
+                        .HasForeignKey("ParentValueId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RetailCore.Domain.Entities.Product", "Product")
+                        .WithMany("ProductAttributes")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentValue");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("RetailCore.Domain.Entities.ProductImage", b =>
                 {
                     b.HasOne("RetailCore.Domain.Entities.Product", null)
-                        .WithMany()
+                        .WithMany("ProductImages")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -769,6 +838,23 @@ namespace RetailCore.Infrastructure.Data.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.Category", b =>
+                {
+                    b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.Product", b =>
+                {
+                    b.Navigation("ProductAttributes");
+
+                    b.Navigation("ProductImages");
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.ProductAttribute", b =>
+                {
+                    b.Navigation("ChildValues");
                 });
 #pragma warning restore 612, 618
         }

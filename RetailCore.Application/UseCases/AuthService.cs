@@ -2,7 +2,7 @@ using Duende.IdentityModel.Client;
 using Duende.IdentityServer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using RetailCore.Infrastructure.Identity;
+using RetailCore.Infrastructure.Data.Configurations.Identity;
 
 namespace RetailCore.Application.UseCases;
 
@@ -106,7 +106,7 @@ public class AuthService : IAuthService
 
         try
         {
-            var user = new IdentityUser<Guid> 
+            IdentityUser<Guid> user = new IdentityUser<Guid> 
             { 
                 Id = Guid.CreateVersion7(), 
                 UserName = request.Email, 
@@ -114,14 +114,15 @@ public class AuthService : IAuthService
             };
 
             await _userManager.CreateAsync(user, request.Password);
-            
-            var customer = new Customer { 
+            await _userManager.AddToRoleAsync(user, Domain.Constants.Roles.Customer);
+
+            Customer customer = new Customer { 
                 Id = Guid.CreateVersion7(), 
                 UserId = user.Id, 
                 FullName = request.FullName, 
                 Email = request.Email 
             };
-
+            
             await _customerRepository.AddAsync(customer);
             await _customerRepository.SaveChangesAsync();
 
@@ -155,6 +156,6 @@ public class AuthService : IAuthService
 
         response.Cookies.Delete("XSRF-TOKEN");
 
-        return Result<bool>.Success(true);
+        return Result<bool>.Success(true,204);
     }
 }

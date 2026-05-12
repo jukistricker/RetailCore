@@ -13,4 +13,7 @@ public class Product: BaseEntity
     public string? ThumbnailUrl { get; set; }
     public bool IsFeatured { get; set; } = false;
     public bool IsActive { get; set; } = true;
+    public Category Category { get; set; } = null!;
+    public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
+    public ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
 }

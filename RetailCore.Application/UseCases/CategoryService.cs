@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using RetailCore.Application.Extensions;
 using RetailCore.Application.Mappings;
 
@@ -23,8 +24,9 @@ public class CategoryService : ICategoryService
 
     public async Task<Result<PagingResponse<CategoryResponse>>> GetByPageAsync(PagingRequest request)
     {
-        PagingResponse<Category> categories = await _categoryRepository.GetByPageAsync(request);
-        return Result<PagingResponse<CategoryResponse>>.Success(CategoryMapping.ToPagingResponse(categories));
+        IQueryable<Category> query = _categoryRepository.GetQueryable().AsNoTracking();
+        PagingResponse<Category> response = await _categoryRepository.GetByPageAsync(query,request.PageNumber, request.PageSize);
+        return Result<PagingResponse<CategoryResponse>>.Success(CategoryMapping.ToPagingResponse(response));
     }
 
     public async Task<Result<CategoryResponse>> GetByIdAsync(Guid id)
@@ -39,26 +41,37 @@ public class CategoryService : ICategoryService
 
     public async Task<Result<Guid>> CreateAsync(CreateCategoryRequest request)
     {
-        var category = CategoryMapping.ToEntityCreate(request);
+        Guid userId = _httpContextAccessor.HttpContext.User.GetCustomerId();
+        if (await _categoryRepository.GetQueryable().AsNoTracking()
+                .AnyAsync(c => c.Name == request.Name))
+        {
+            return Result<Guid>.Failure("Category name already exists");
+        }
+        Category category = CategoryMapping.ToEntityCreate(request, userId);
         await _categoryRepository.AddAsync(category);
         await _categoryRepository.SaveChangesAsync();
         return Result<Guid>.Success(category.Id);
     }
 
-    public async Task<Result<bool>> UpdateAsync(Guid id, UpdateCategoryRequest request)
+    public async Task<Result<bool>> UpdateAsync(UpdateCategoryRequest request)
     {
-        Category category = await _categoryRepository.GetByIdAsync(id);
+        Category? category = await _categoryRepository.GetByIdAsync(request.Id);
         if (category == null)
         {
             return Result<bool>.Failure("Category not found");
         }
-        Guid userId = _httpContextAccessor.HttpContext.User.GetUserId(); 
+        if (category.Name!=request.Name && await _categoryRepository.GetQueryable()
+                .AnyAsync(c => c.Name == request.Name && c.Id != request.Id))
+        {
+            return Result<bool>.Failure("Category name already exists");
+        }
+        Guid userId = _httpContextAccessor.HttpContext.User.GetCustomerId(); 
         CategoryMapping.ToEntityUpdate(category, request, userId);
         
         _categoryRepository.Update(category); 
         await _categoryRepository.SaveChangesAsync();
         
-        return Result<bool>.Success(true);
+        return Result<bool>.Success(true,204);
     }
 
     public async Task<Result<bool>> DeleteAsync(Guid id)
@@ -77,6 +90,6 @@ public class CategoryService : ICategoryService
         _categoryRepository.Delete(category);
         await _categoryRepository.SaveChangesAsync();
         
-        return Result<bool>.Success(true);
+        return Result<bool>.Success(true,204);
     }
 }

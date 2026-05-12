@@ -1,15 +1,14 @@
-// namespace RetailCore.Application.UseCases.Interfaces;
-//
-// public interface IProductService
-// {
-//     // Admin CRUD
-//     Task<PagedResponse<ProductResponse>> GetPagedAsync(int pageIndex, int pageSize);
-//     Task<ProductResponse?> GetByIdAsync(Guid id);
-//     Task<Guid> CreateAsync(CreateProductRequest request);
-//     Task<bool> UpdateAsync(Guid id, UpdateProductRequest request);
-//     Task<bool> DeleteAsync(Guid id);
-//
-//     // Customer Portal logic (Week 2)
-//     Task<IEnumerable<ProductResponse>> GetByCategoryIdAsync(Guid categoryId);
-//     Task<IEnumerable<ProductResponse>> GetFeaturedProductsAsync(int count);
-// }
+namespace RetailCore.Application.UseCases.Interfaces;
+
+public interface IProductService
+{
+    Task<Result<IEnumerable<ProductSummaryResponse>>> GetFeaturedProductsAsync(int count);
+    Task<Result<PagingResponse<ProductSummaryResponse>>> GetProductsAsync(
+        PagingRequest request,
+        Guid? categoryId = null,
+        string? slug = null);
+    Task<Result<ProductDetailResponse>> GetProductDetailAsync(Guid id);
+    Task<Result<bool>> CreateProductAsync(ProductCreateRequest request);
+    Task<Result<bool>> UpdateProductAsync(Guid id, ProductUpdateRequest request);
+    Task<Result<bool>> DeleteProductAsync(Guid id);
+}

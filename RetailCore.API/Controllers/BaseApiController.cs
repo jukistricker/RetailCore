@@ -1,5 +1,3 @@
-using RetailCore.Domain.Commons;
-
 namespace RetailCore.API.Controllers;
 
 [ApiController]
@@ -11,6 +9,10 @@ public abstract class ApiControllerBase : ControllerBase
 
         if (result.IsSuccess)
         {
+            if (result.StatusCode == 204)
+            {
+                return NoContent();
+            }
             if (result.Value != null)
                 return StatusCode(result.StatusCode, result);
             

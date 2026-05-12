@@ -13,28 +13,23 @@ public class Repository<T> : IRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public async Task<PagingResponse<T>> GetByPageAsync(PagingRequest request)
+    public async Task<PagingResponse<T>> GetByPageAsync(
+        IQueryable<T> query, 
+        int pageNumber=1, 
+        int pageSize=10)
     {
-        var query = _dbSet.AsNoTracking();
-
-        int totalCount = await query.CountAsync();
-
-        string sortBy = request.SortBy ?? "Id";
-        query = request.IsDescending 
-            ? query.OrderByDescending(x => EF.Property<object>(x, sortBy)) 
-            : query.OrderBy(x => EF.Property<object>(x, sortBy));
-
+        var totalCount = await query.CountAsync();
+    
         var items = await query
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        return new PagingResponse<T>
-        {
+        return new PagingResponse<T> {
             Items = items,
             TotalCount = totalCount,
-            PageNumber = request.PageNumber,
-            PageSize = request.PageSize
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
     }
 
@@ -66,5 +61,10 @@ public class Repository<T> : IRepository<T> where T : class
     public async Task<bool> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync() > 0;
+    }
+    
+    public IQueryable<T> GetQueryable()
+    {
+        return _dbSet.AsQueryable();
     }
 }

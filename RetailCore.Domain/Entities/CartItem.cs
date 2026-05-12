@@ -6,5 +6,6 @@ public class CartItem: BaseEntity
 {
     public Guid CustomerId { get; set; }
     public Guid ProductId { get; set; }
+    public Guid? ProductAttributeId { get; set; }
     public int Quantity { get; set; } = 1;
 }
