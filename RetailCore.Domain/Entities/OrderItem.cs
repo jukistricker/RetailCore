@@ -7,7 +7,8 @@ public class OrderItem : BaseEntity
     public Guid? ProductAttributeId { get; set; }
     public int Quantity { get; set; }
     public decimal Price { get; set; }
-
+    public string? SelectedAttributes { get; set; }
+    
     public Order Order { get; set; }
     public Product Product { get; set; }
 }

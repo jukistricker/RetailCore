@@ -32,10 +32,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot\user-content\products\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <_ContentIncludedByDefault Remove="keys\is-signing-key-A8608F7DB2C2D64F66EF2BF4FC9E67D8.json"/>
     </ItemGroup>
 
