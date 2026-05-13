@@ -2,7 +2,6 @@ using RetailCore.Domain.Entities;
 
 namespace RetailCore.Domain.Interfaces.Repositories;
 
-public interface IOrderRepository: IRepository<Order>
+public interface IOrderRepository : IRepository<Order>
 {
-    
 }

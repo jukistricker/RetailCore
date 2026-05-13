@@ -1,4 +1,3 @@
-using Duende.IdentityModel;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 
@@ -11,9 +10,9 @@ public static class IdentityConfiguration
     public static IEnumerable<IdentityResource> IdentityResources =>
         new List<IdentityResource>
         {
-            new IdentityResources.OpenId(), 
-            new IdentityResources.Profile(), 
-            new IdentityResources.Email(),
+            new IdentityResources.OpenId(),
+            new IdentityResources.Profile(),
+            new IdentityResources.Email()
         };
 
     // 2. Định nghĩa các phạm vi truy cập API
@@ -21,8 +20,7 @@ public static class IdentityConfiguration
     {
         return new List<ApiScope>
         {
-            new ApiScope(options.ApiScopeName, "Full Access to Retail Core API")
-            
+            new(options.ApiScopeName, "Full Access to Retail Core API")
         };
     }
 
@@ -31,43 +29,47 @@ public static class IdentityConfiguration
     {
         return new List<ApiResource>
         {
-            new ApiResource(options.ApiScopeName, "Retail Core API")
+            new(options.ApiScopeName, "Retail Core API")
             {
-                UserClaims = { "role", "customer_id" }, 
+                UserClaims = { "role", "customer_id" },
                 Scopes = { options.ApiScopeName }
             }
         };
     }
+
     // 3. Cấu hình các ứng dụng Client
     public static IEnumerable<Client> GetClients(IdentityServerOptions options)
     {
         return new List<Client>
         {
             // Client dành cho React Admin (Dùng Password Grant để gói vào Cookie)
-            new Client
+            new()
             {
                 ClientId = options.AdminClientId, //tên của client
                 ClientName = options.AdminClientName, //tên hiển thị trên giao diện lúc đăng nhập
-                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword, // Cho phép gửi trực tiếp username và password từ client lên server
+                AllowedGrantTypes =
+                    GrantTypes
+                        .ResourceOwnerPassword, // Cho phép gửi trực tiếp username và password từ client lên server
                 ClientSecrets = { new Secret(options.AdminSecret.Sha256()) }, //Mật khẩu của ứng dụng 
                 AlwaysIncludeUserClaimsInIdToken = true,
                 AllowOfflineAccess = true, // Quan trọng: Cho phép cấp refresh token 
                 AccessTokenLifetime = 900, // 15 phút
                 RefreshTokenUsage = TokenUsage.OneTimeOnly, //refresh token chỉ được sử dụng 1 lần rồi sẽ bị hủy 
-                RefreshTokenExpiration = TokenExpiration.Sliding,  //nếu đang dùng app liên tục, refresh token sẽ tự động được gia hạn thêm
+                RefreshTokenExpiration =
+                    TokenExpiration.Sliding, //nếu đang dùng app liên tục, refresh token sẽ tự động được gia hạn thêm
                 AbsoluteRefreshTokenLifetime = 604800, // 7 ngày
 
                 //Danh sách các quyền của client này
-                AllowedScopes = 
-                { 
-                    IdentityServerConstants.StandardScopes.OpenId, 
+                AllowedScopes =
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
                     IdentityServerConstants.StandardScopes.Profile,
                     options.ApiScopeName
                 }
             },
 
             // Client dành cho Customer Site 
-            new Client
+            new()
             {
                 ClientId = options.CustomerClientId,
                 ClientName = options.CustomerClientName,
@@ -79,19 +81,18 @@ public static class IdentityConfiguration
                 PostLogoutRedirectUris = { $"{options.CustomerBaseUrl}/signout-callback-oidc" },
 
                 AllowOfflineAccess = true,
-                AccessTokenLifetime = 900, 
-                RefreshTokenUsage = TokenUsage.OneTimeOnly, 
-                RefreshTokenExpiration = TokenExpiration.Sliding, 
+                AccessTokenLifetime = 900,
+                RefreshTokenUsage = TokenUsage.OneTimeOnly,
+                RefreshTokenExpiration = TokenExpiration.Sliding,
                 AbsoluteRefreshTokenLifetime = 604800,
-                
-                AllowedScopes = 
-                { 
-                    IdentityServerConstants.StandardScopes.OpenId, 
+
+                AllowedScopes =
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
                     IdentityServerConstants.StandardScopes.Profile,
                     options.ApiScopeName
                 }
             }
         };
     }
-        
 }

@@ -1,8 +1,6 @@
-namespace RetailCore.Infrastructure.Data.Configurations;
-
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+namespace RetailCore.Infrastructure.Data.Configurations;
 
 public class ProductAttributeConfiguration : IEntityTypeConfiguration<ProductAttribute>
 {
@@ -21,14 +19,14 @@ public class ProductAttributeConfiguration : IEntityTypeConfiguration<ProductAtt
             .HasMaxLength(255);
 
         builder.HasOne(x => x.Product)
-            .WithMany(p => p.ProductAttributes) 
+            .WithMany(p => p.ProductAttributes)
             .HasForeignKey(x => x.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(x => x.ParentValue)
             .WithMany(x => x.ChildValues)
             .HasForeignKey(x => x.ParentValueId)
-            .OnDelete(DeleteBehavior.Restrict); 
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.PriceAdjustment)
             .HasColumnType("decimal(18,2)");

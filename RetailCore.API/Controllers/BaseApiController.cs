@@ -9,13 +9,10 @@ public abstract class ApiControllerBase : ControllerBase
 
         if (result.IsSuccess)
         {
-            if (result.StatusCode == 204)
-            {
-                return NoContent();
-            }
+            if (result.StatusCode == 204) return NoContent();
             if (result.Value != null)
                 return StatusCode(result.StatusCode, result);
-            
+
             return StatusCode(result.StatusCode);
         }
 

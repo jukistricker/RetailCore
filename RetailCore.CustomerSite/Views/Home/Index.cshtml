@@ -1,8 +1,68 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model IEnumerable<ProductSummaryResponse>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <h2 class="my-4">Featured Products</h2>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5">
+        @foreach (var product in Model)
+        {
+            <div class="col">
+                @await Html.PartialAsync("_ProductCardPartial", product)
+            </div>
+        }
+    </div>
+
+    <hr/>
+    ]
+    <h2 class="my-4">New Products</h2>
+    <div id="product-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
+    </div>
+
+    <div id="load-more-sentinel" class="text-center my-5">
+        <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        let pageNumber = 1;
+        let isLoading = false;
+        const container = document.querySelector('#product-container');
+        const loader = document.querySelector('#loader');
+        const sentinel = document.querySelector('#load-more-sentinel');
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading) {
+                loadMoreProducts();
+            }
+        }, {threshold: 1.0});
+
+        observer.observe(sentinel);
+
+        async function loadMoreProducts() {
+            isLoading = true;
+            loader.classList.remove('d-none');
+
+            try {
+
+                const response = await fetch(`/Product/Index?PageNumber=${pageNumber}&PageSize=8&isPartial=true`);
+
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.trim().length > 0) {
+                        container.insertAdjacentHTML('beforeend', html);
+                        pageNumber++;
+                    } else {
+                        observer.unobserve(sentinel);
+                        sentinel.innerHTML = "<p class='text-muted'>Đã hiển thị toàn bộ sản phẩm.</p>";
+                    }
+                }
+            } catch (error) {
+                console.error("Lỗi khi load thêm sản phẩm:", error);
+            } finally {
+                isLoading = false;
+                loader.classList.add('d-none');
+            }
+        }
+    </script>
+}

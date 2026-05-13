@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 
@@ -32,7 +30,7 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
 
         // FK -> Products
         builder.HasOne<Product>()
-            .WithMany(p=>p.ProductImages)
+            .WithMany(p => p.ProductImages)
             .HasForeignKey(pi => pi.ProductId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);

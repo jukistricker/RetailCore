@@ -1,5 +1,3 @@
-using System;
-
 namespace RetailCore.Domain.Entities;
 
 public class BaseEntity

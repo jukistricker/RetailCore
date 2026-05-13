@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 

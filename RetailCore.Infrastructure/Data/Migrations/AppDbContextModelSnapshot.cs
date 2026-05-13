@@ -234,6 +234,9 @@ namespace RetailCore.Infrastructure.Data.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ProductAttributeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
@@ -253,11 +256,9 @@ namespace RetailCore.Infrastructure.Data.Migrations
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("IX_CartItems_CustomerId");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ProductAttributeId");
 
-                    b.HasIndex("CustomerId", "ProductId")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_CartItems_Customer_Product");
+                    b.HasIndex("ProductId");
 
                     b.ToTable("CartItems", null, t =>
                         {
@@ -387,11 +388,6 @@ namespace RetailCore.Infrastructure.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("ShippingCity")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -439,17 +435,17 @@ namespace RetailCore.Infrastructure.Data.Migrations
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("ProductAttributeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("SubTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
@@ -465,9 +461,9 @@ namespace RetailCore.Infrastructure.Data.Migrations
 
                     b.ToTable("OrderItems", null, t =>
                         {
-                            t.HasCheckConstraint("CK_OrderItems_Quantity", "Quantity > 0");
+                            t.HasCheckConstraint("CK_OrderItems_Price", "Price >= 0");
 
-                            t.HasCheckConstraint("CK_OrderItems_UnitPrice", "UnitPrice >= 0");
+                            t.HasCheckConstraint("CK_OrderItems_Quantity", "Quantity > 0");
                         });
                 });
 
@@ -569,7 +565,7 @@ namespace RetailCore.Infrastructure.Data.Migrations
                     b.Property<Guid?>("ParentValueId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("PriceAdjustment")
+                    b.Property<decimal>("PriceAdjustment")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("ProductId")
@@ -748,11 +744,20 @@ namespace RetailCore.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RetailCore.Domain.Entities.Product", null)
+                    b.HasOne("RetailCore.Domain.Entities.ProductAttribute", "ProductAttribute")
+                        .WithMany()
+                        .HasForeignKey("ProductAttributeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RetailCore.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ProductAttribute");
                 });
 
             modelBuilder.Entity("RetailCore.Domain.Entities.Customer", b =>
@@ -774,17 +779,21 @@ namespace RetailCore.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("RetailCore.Domain.Entities.OrderItem", b =>
                 {
-                    b.HasOne("RetailCore.Domain.Entities.Order", null)
-                        .WithMany()
+                    b.HasOne("RetailCore.Domain.Entities.Order", "Order")
+                        .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RetailCore.Domain.Entities.Product", null)
+                    b.HasOne("RetailCore.Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("RetailCore.Domain.Entities.Product", b =>
@@ -843,6 +852,11 @@ namespace RetailCore.Infrastructure.Data.Migrations
             modelBuilder.Entity("RetailCore.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("RetailCore.Domain.Entities.Order", b =>
+                {
+                    b.Navigation("OrderItems");
                 });
 
             modelBuilder.Entity("RetailCore.Domain.Entities.Product", b =>

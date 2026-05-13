@@ -9,6 +9,6 @@ public class IdentityServerOptions
     public string AdminSecret { get; set; }
     public string CustomerClientId { get; set; }
     public string CustomerClientName { get; set; }
-    public string CustomerSecret { get; set; } 
-    public string CustomerBaseUrl { get; set; } 
+    public string CustomerSecret { get; set; }
+    public string CustomerBaseUrl { get; set; }
 }

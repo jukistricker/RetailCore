@@ -1,9 +1,10 @@
 namespace RetailCore.Application.UseCases.Interfaces;
-//
+
 public interface ICartItemService
 {
-//     Task<CartResponse> GetCartAsync(Guid customerId);
-//     Task AddToCartAsync(Guid customerId, AddToCartRequest request);
-//     Task RemoveFromCartAsync(Guid customerId, Guid productId);
-//     Task ClearCartAsync(Guid customerId);
+    Task<Result<bool>> AddToCartAsync(CartItemSaveRequest request);
+    Task<Result<PagingResponse<CartItemResponse>>> GetCartItemsAsync(PagingRequest request);
+    Task<Result<bool>> DeleteCartItemsAsync(List<Guid> cartItemIds);
+    Task<Result<CartItemResponse>> GetByIdAsync(Guid id);
+    Task<Result<bool>> UpdateAsync(CartItemUpdateRequest request);
 }

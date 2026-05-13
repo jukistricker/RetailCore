@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 
@@ -43,7 +41,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .IsRequired();
 
         builder.Property(c => c.CreatedBy)
-            .IsRequired(false);    
+            .IsRequired(false);
 
         builder.HasOne<IdentityUser<Guid>>()
             .WithOne()

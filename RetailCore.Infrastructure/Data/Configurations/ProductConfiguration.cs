@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 
@@ -33,7 +31,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnType("decimal(18,2)");
 
         builder.ToTable(t => t.HasCheckConstraint("CK_Products_Price", "Price >= 0"));
-        
+
         builder.Property(p => p.Stock)
             .IsRequired()
             .HasDefaultValue(0);

@@ -4,15 +4,19 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using RetailCore.API.Middlewares;
-using RetailCore.Application.Validators.Auth;
+using RetailCore.Domain.Constants;
 using RetailCore.Infrastructure.Data.Configurations.Identity;
+using RetailCore.Shared.Validators.Auth;
+using RetailCore.Shared.Validators.Product;
 
 var builder = WebApplication.CreateBuilder(args);
 
-string? adminEmail = builder.Configuration["AdminEmail"];
-string? adminPassword = builder.Configuration["AdminPassword"];
+var adminEmail = builder.Configuration["AdminEmail"];
+var adminPassword = builder.Configuration["AdminPassword"];
+var customerBaseUrl = builder.Configuration["IdentityConfig:CustomerBaseUrl"];
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -31,7 +35,7 @@ builder.Services.AddOpenApi(options =>
             Description = "Hệ thống sử dụng HttpOnly Cookie."
         };
 
-        document.Components ??= new();
+        document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
         {
             ["CookieAuth"] = scheme
@@ -40,10 +44,10 @@ builder.Services.AddOpenApi(options =>
         // 2. Định nghĩa Requirement (Cấu trúc mới của .NET 10)
         // Lưu ý: Key của Dictionary lúc này là OpenApiSecuritySchemeReference
         var requirement = new OpenApiSecurityRequirement();
-        
+
         // Tạo reference trỏ đến "CookieAuth" đã định nghĩa ở trên
         var schemeReference = new OpenApiSecuritySchemeReference("CookieAuth", document);
-        
+
         // Gán vào requirement với list các scope (để trống vì dùng Cookie)
         requirement.Add(schemeReference, new List<string>());
 
@@ -74,21 +78,28 @@ builder.Services.AddIdentityServer(options =>
     .AddInMemoryApiResources(IdentityConfiguration.GetApiResources(identityOptions))
     .AddInMemoryIdentityResources(IdentityConfiguration.IdentityResources)
     .AddAspNetIdentity<IdentityUser<Guid>>()
-    .AddProfileService<ProfileService>();;
+    .AddProfileService<ProfileService>();
+;
 
 builder.Services.Configure<IdentityServerOptions>(identityConfigSection);
 
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ProductCreateRequestValidator>();
+builder.Services.AddValidatorsFromAssemblyContaining<ProductUpdateRequestValidator>();
+
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStorageService, FileStorageService>();
+builder.Services.AddScoped<ICartItemService, CartItemService>();
+builder.Services.AddScoped<ICustomerService, CustomerService>();
 
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductAttributeRepository, ProductAttributeRepository>();
+builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -100,7 +111,7 @@ builder.Services.AddAuthentication(options =>
         options.Authority = identityOptions.Authority;
         options.RequireHttpsMetadata = false;
         options.MapInboundClaims = false;
-        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = false,
             RoleClaimType = "role"
@@ -117,23 +128,34 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminPolicy", policy => 
-        policy.RequireRole(RetailCore.Domain.Constants.Roles.Admin));
-    
-    options.AddPolicy("CustomerPolicy", policy => 
-        policy.RequireRole(RetailCore.Domain.Constants.Roles.Customer));
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole(Roles.Admin));
+
+    options.AddPolicy("CustomerPolicy", policy =>
+        policy.RequireRole(Roles.Customer));
 });
 
 builder.Services.AddAntiforgery(options =>
 {
     // Chứng minh không phải là CSRF
-    options.HeaderName = "X-XSRF-TOKEN"; 
+    options.HeaderName = "X-XSRF-TOKEN";
 });
 builder.Services.AddControllers();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigins",
+        policy =>
+        {
+            policy.WithOrigins(customerBaseUrl) 
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+});
 
 var app = builder.Build();
 
@@ -144,16 +166,18 @@ app.Use((context, next) =>
     var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
     var tokens = antiforgery.GetAndStoreTokens(context);
     // Lưu CSRF Token vào một Cookie KHÔNG HttpOnly để JavaScript ở Frontend đọc được
-    context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, 
+    context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!,
         new CookieOptions { HttpOnly = false, SameSite = SameSiteMode.Lax });
-    
+
     return next(context);
 });
+app.UseRouting();
+app.UseCors("AllowSpecificOrigins");
 
 app.UseHttpsRedirection();
 app.UseIdentityServer();
 
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 
@@ -177,14 +201,14 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi(); //sinh file json
-    
+
     app.UseSwaggerUI(options =>
     {
         // Trỏ vào file json mà Microsoft.AspNetCore.OpenApi sinh ra
         options.SwaggerEndpoint("/openapi/v1.json", "Retail Core API v1");
-        
+
         options.RoutePrefix = "swagger";
-        
+
         // Cho phép gửi Cookie đi kèm request test
         options.ConfigObject.AdditionalItems["withCredentials"] = true;
     });

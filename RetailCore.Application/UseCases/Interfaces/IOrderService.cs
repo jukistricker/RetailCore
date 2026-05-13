@@ -1,8 +1,9 @@
-// namespace RetailCore.Application.UseCases.Interfaces;
+namespace RetailCore.Application.UseCases.Interfaces;
+
 //
-// public interface IOrderService
-// {
+public interface IOrderService
+{
 //     Task<Guid> PlaceOrderAsync(CheckoutRequest request);
 //     Task<OrderResponse?> GetOrderDetailsAsync(Guid orderId);
 //     Task<IEnumerable<OrderResponse>> GetCustomerOrderHistoryAsync(Guid customerId);
-// }
+}

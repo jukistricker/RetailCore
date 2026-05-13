@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 
@@ -15,7 +13,7 @@ public class ProductRatingConfiguration : IEntityTypeConfiguration<ProductRating
 
         builder.Property(pr => pr.Rating)
             .IsRequired();
-        
+
         builder.ToTable(t => t.HasCheckConstraint("CK_ProductRatings_Rating", "Rating BETWEEN 1 AND 5"));
 
         builder.Property(pr => pr.Review)

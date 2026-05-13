@@ -14,25 +14,29 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.14.11" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.7" />
+        <PackageReference Include="Microsoft.OpenApi" Version="2.0.0"/>
+        <PackageReference Include="Scalar.AspNetCore" Version="2.14.11"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.7"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\RetailCore.Application\RetailCore.Application.csproj" />
-      <ProjectReference Include="..\RetailCore.Infrastructure\RetailCore.Infrastructure.csproj" />
+        <ProjectReference Include="..\RetailCore.Application\RetailCore.Application.csproj"/>
+        <ProjectReference Include="..\RetailCore.Infrastructure\RetailCore.Infrastructure.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\user-content\products\" />
+        <Folder Include="wwwroot\user-content\products\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <_ContentIncludedByDefault Remove="keys\is-signing-key-A8608F7DB2C2D64F66EF2BF4FC9E67D8.json"/>
     </ItemGroup>
 
 </Project>

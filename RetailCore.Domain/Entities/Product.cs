@@ -1,8 +1,6 @@
-using System;
-
 namespace RetailCore.Domain.Entities;
 
-public class Product: BaseEntity
+public class Product : BaseEntity
 {
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;

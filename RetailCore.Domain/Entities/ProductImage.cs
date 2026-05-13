@@ -1,8 +1,6 @@
-using System;
-
 namespace RetailCore.Domain.Entities;
 
-public class ProductImage: BaseEntity
+public class ProductImage : BaseEntity
 {
     public Guid ProductId { get; set; }
     public string Url { get; set; } = string.Empty;

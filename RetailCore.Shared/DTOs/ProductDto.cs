@@ -12,7 +12,7 @@ public class ProductSummaryResponse
     public decimal Price { get; set; }
     public string? ThumbnailUrl { get; set; }
 }
-    
+
 public record ProductDetailResponse
 {
     public Guid Id { get; set; }
@@ -30,10 +30,10 @@ public class ProductAttributeResponse
 {
     public Guid Id { get; set; }
     public string AttributeName { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;        
+    public string Value { get; set; } = string.Empty;
     public decimal? PriceAdjustment { get; set; }
     public int? Stock { get; set; }
-    
+
     public IEnumerable<ProductAttributeResponse>? ChildAttributes { get; set; }
 }
 
@@ -55,7 +55,9 @@ public class ProductCreateRequest
     public string? ThumbnailUrl { get; set; }
     public bool IsFeatured { get; set; }
     public List<IFormFile> Images { get; set; }
-    public List<ProductAttributeRequest>? Attributes { get; set; }
+
+    public string? Attributes { get; set; }
+    // "[{\"attributeName\":\"Color\",\"value\":\"Red\",\"priceAdjustment\":0.21,\"stock\":43,\"childAttributes\":[{\"attributeName\":\"Size\",\"value\":\"XL\",\"priceAdjustment\":0.22,\"stock\":2},{\"attributeName\":\"Size\",\"value\":\"L\",\"priceAdjustment\":0.22,\"stock\":2}]},{\"attributeName\":\"Material\",\"value\":\"Cotton\",\"priceAdjustment\":0.22,\"stock\":2,\"childAttributes\":[]}]"
 }
 
 public class ProductUpdateRequest
@@ -71,15 +73,14 @@ public class ProductUpdateRequest
     public bool IsFeatured { get; set; }
     public bool IsActive { get; set; }
     public List<IFormFile> Images { get; set; }
-    public List<ProductAttributeRequest>? Attributes { get; set; }
+    public string? Attributes { get; set; }
 }
 
 public class ProductAttributeRequest
 {
-    public string AttributeName { get; set; } = string.Empty; 
-    public string Value { get; set; } = string.Empty;         
+    public string AttributeName { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
     public decimal? PriceAdjustment { get; set; }
     public int? Stock { get; set; }
-    
-    public List<ProductAttributeRequest>? ChildAttributes { get; set; } 
+    public List<ProductAttributeRequest>? ChildAttributes { get; set; }
 }

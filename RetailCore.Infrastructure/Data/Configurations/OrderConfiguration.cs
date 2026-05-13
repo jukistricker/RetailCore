@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 using RetailCore.Domain.Enums;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
@@ -16,11 +14,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Property(o => o.Status)
             .IsRequired()
-            .HasConversion<string>()    // lưu enum dạng string vào DB
+            .HasConversion<string>() // lưu enum dạng string vào DB
             .HasMaxLength(20)
             .HasDefaultValue(OrderStatus.Pending);
 
-        
+
         builder.ToTable(t => t.HasCheckConstraint("CK_Orders_Status",
             "Status IN ('Pending','Confirmed','Shipping','Delivered','Cancelled')"));
 
@@ -28,16 +26,16 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .IsRequired()
             .HasColumnType("decimal(18,2)");
 
-        
+
         builder.ToTable(t => t.HasCheckConstraint("CK_Orders_TotalAmount", "TotalAmount >= 0"));
 
         builder.Property(o => o.ShippingAddress)
             .IsRequired()
             .HasMaxLength(500);
 
-        builder.Property(o => o.ShippingCity)
+        builder.Property(o => o.ShippingAddress)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(500);
 
         builder.Property(o => o.Note)
             .HasMaxLength(500);
@@ -48,7 +46,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CreatedBy)
             .IsRequired();
 
-        // FK → Customers
+        builder.HasMany(o => o.OrderItems)
+            .WithOne(oi => oi.Order)
+            .HasForeignKey(oi => oi.OrderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // FK -> Customers
         builder.HasOne<Customer>()
             .WithMany()
             .HasForeignKey(o => o.CustomerId)

@@ -1,0 +1,8 @@
+@model IEnumerable<ProductSummaryResponse>
+
+@foreach (var product in Model)
+{
+    <div class="col">
+        @await Html.PartialAsync("_ProductCardPartial", product)
+    </div>
+}

@@ -9,9 +9,9 @@ public static class CategoryMapping
             Id = Guid.CreateVersion7(),
             Name = categoryRequest.Name,
             Description = categoryRequest.Description,
-            SortOrder =  categoryRequest.SortOrder,
+            SortOrder = categoryRequest.SortOrder,
             CreatedBy = userId,
-            CreatedDate = DateTime.Now,
+            CreatedDate = DateTime.Now
         };
     }
 
@@ -35,7 +35,7 @@ public static class CategoryMapping
             CreatedBy = category.CreatedBy,
             CreatedDate = category.CreatedDate,
             UpdatedBy = category.UpdatedBy,
-            UpdatedDate = category.UpdatedDate,
+            UpdatedDate = category.UpdatedDate
         };
     }
 
@@ -43,7 +43,7 @@ public static class CategoryMapping
     {
         return new PagingResponse<CategoryResponse>
         {
-            Items = pagingResponse.Items.Select(x=> ToResponse(x)).ToList(),
+            Items = pagingResponse.Items.Select(x => ToResponse(x)).ToList(),
             TotalCount = pagingResponse.TotalCount,
             PageNumber = pagingResponse.PageNumber,
             PageSize = pagingResponse.PageSize

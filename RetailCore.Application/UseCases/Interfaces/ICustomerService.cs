@@ -1,8 +1,9 @@
-// namespace RetailCore.Application.UseCases.Interfaces;
+namespace RetailCore.Application.UseCases.Interfaces;
 //
-// public interface ICustomerService
-// {
-//     Task<IEnumerable<CustomerResponse>> GetAllCustomersAsync(); // Admin Oversight
-//     Task<CustomerResponse?> GetProfileAsync(Guid userId);
-//     Task<bool> UpdateProfileAsync(Guid userId, UpdateProfileRequest request);
-// }
+public interface ICustomerService
+{
+    Task<Result<PagingResponse<CustomerResponse>>> GetAllUsersAsync(PagingRequest request);
+    Task<Result<CustomerResponse>> GetUserByIdAsync(Guid id);
+    Task<Result<bool>> UpdateUserAsync(Guid id, UpdateCustomerRequest request);
+}
+

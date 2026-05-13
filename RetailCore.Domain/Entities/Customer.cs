@@ -1,8 +1,6 @@
-using System;
-
 namespace RetailCore.Domain.Entities;
 
-public class Customer: BaseEntity
+public class Customer : BaseEntity
 {
     public Guid? UserId { get; set; } // AspNetUsers (Week 3)
     public string FullName { get; set; } = string.Empty;

@@ -10,7 +10,7 @@ public static class ProductAttributeMapping
             ProductId = product.Id,
             AttributeName = request.AttributeName,
             Value = request.Value,
-            PriceAdjustment = request.PriceAdjustment,
+            PriceAdjustment = request.PriceAdjustment ?? 0,
             Stock = request.Stock,
             ParentValueId = parentId
         };

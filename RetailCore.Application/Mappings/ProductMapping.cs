@@ -6,10 +6,10 @@ public static class ProductMapping
     {
         return products.Select(p => new ProductSummaryResponse
         {
-            Id = p.Id, 
-            Name = p.Name, 
-            Slug = p.Slug, 
-            Price = p.Price, 
+            Id = p.Id,
+            Name = p.Name,
+            Slug = p.Slug,
+            Price = p.Price,
             ThumbnailUrl = p.ThumbnailUrl
         }).ToList();
     }
@@ -23,7 +23,6 @@ public static class ProductMapping
             Slug = product.Slug,
             Price = product.Price,
             ThumbnailUrl = product.ThumbnailUrl
-
         };
     }
 
@@ -65,17 +64,18 @@ public static class ProductMapping
         };
     }
 
-    public static PagingResponse<ProductSummaryResponse> ToProductSummayResponseList(PagingResponse<Product> pagingResponse)
+    public static PagingResponse<ProductSummaryResponse> ToProductSummayResponseList(
+        PagingResponse<Product> pagingResponse)
     {
         return new PagingResponse<ProductSummaryResponse>
         {
-            Items =  pagingResponse.Items.Select(p => ToProductSummaryResponse(p)),
+            Items = pagingResponse.Items.Select(p => ToProductSummaryResponse(p)),
             TotalCount = pagingResponse.TotalCount,
             PageNumber = pagingResponse.PageNumber,
             PageSize = pagingResponse.PageSize
         };
     }
-    
+
     public static Product ToEntityCreate(ProductCreateRequest request, Guid userId)
     {
         return new Product
@@ -93,7 +93,7 @@ public static class ProductMapping
             CreatedBy = userId
         };
     }
-    
+
     public static void ToEntityUpdate(Product product, ProductUpdateRequest request, Guid userId)
     {
         product.Name = request.Name;

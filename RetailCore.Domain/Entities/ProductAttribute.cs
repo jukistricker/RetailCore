@@ -12,6 +12,6 @@ public class ProductAttribute : BaseEntity
     public ProductAttribute? ParentValue { get; set; }
     public ICollection<ProductAttribute> ChildValues { get; set; } = new List<ProductAttribute>();
 
-    public decimal? PriceAdjustment { get; set; } 
+    public decimal PriceAdjustment { get; set; } = 0;
     public int? Stock { get; set; }
 }

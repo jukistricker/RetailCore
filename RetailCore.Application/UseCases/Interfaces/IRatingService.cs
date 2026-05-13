@@ -6,3 +6,4 @@
 //     Task<IEnumerable<ReviewResponse>> GetProductReviewsAsync(Guid productId);
 //     Task<double> GetAverageRatingAsync(Guid productId);
 // }
+

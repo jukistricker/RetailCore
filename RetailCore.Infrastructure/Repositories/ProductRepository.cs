@@ -1,10 +1,10 @@
-using RetailCore.Shared.DTOs;
-
 namespace RetailCore.Infrastructure.Repositories;
 
 public class ProductRepository : Repository<Product>, IProductRepository
 {
-    public  ProductRepository(AppDbContext dbContext) : base(dbContext){}
+    public ProductRepository(AppDbContext dbContext) : base(dbContext)
+    {
+    }
 
     public Task<bool> ExistsByCategoryIdAsync(Guid id)
     {
@@ -13,7 +13,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetByFeaturedAsync(int count)
     {
-        List<Product> featuredProducts = await _dbSet.AsNoTracking()
+        var featuredProducts = await _dbSet.AsNoTracking()
             .Where(p => p.IsFeatured && p.IsActive)
             .OrderByDescending(p => p.CreatedDate)
             .Take(count)
@@ -21,7 +21,7 @@ public class ProductRepository : Repository<Product>, IProductRepository
 
         return featuredProducts;
     }
-    
+
     public async Task<Product?> GetDetailAsync(Guid id)
     {
         return await _dbSet.AsNoTracking()

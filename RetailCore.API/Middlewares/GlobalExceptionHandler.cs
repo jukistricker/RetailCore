@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Diagnostics;
 using System.Net;
+using Microsoft.AspNetCore.Diagnostics;
 
 namespace RetailCore.API.Middlewares;
 
@@ -19,7 +19,7 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
 
-        int statusCode = exception switch
+        var statusCode = exception switch
         {
             UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
             KeyNotFoundException => (int)HttpStatusCode.NotFound,
@@ -28,12 +28,13 @@ public class GlobalExceptionHandler : IExceptionHandler
 
         httpContext.Response.StatusCode = statusCode;
 
-        Result<string> response = Result<string>.Failure(
-            exception.Message, 
+        var response = Result<string>.Failure(
+            null,
+            exception.Message,
             statusCode);
 
         await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
-        return true; 
+        return true;
     }
 }

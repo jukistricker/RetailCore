@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RetailCore.Domain.Entities;
 
 namespace RetailCore.Infrastructure.Data.Configurations;
 
@@ -33,16 +31,17 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
             .OnDelete(DeleteBehavior.Cascade);
 
         // FK -> Products
-        builder.HasOne<Product>()
+        builder.HasOne(ci => ci.Product)
             .WithMany()
             .HasForeignKey(ci => ci.ProductId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
 
-        // 1 customer chỉ add 1 product 1 lần
-        builder.HasIndex(ci => new { ci.CustomerId, ci.ProductId })
-            .IsUnique()
-            .HasDatabaseName("UQ_CartItems_Customer_Product");
+        // FK -> ProductAttributes
+        builder.HasOne(ci => ci.ProductAttribute)
+            .WithMany()
+            .HasForeignKey(ci => ci.ProductAttributeId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(ci => ci.CustomerId)
             .HasDatabaseName("IX_CartItems_CustomerId");

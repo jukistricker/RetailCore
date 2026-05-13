@@ -11,6 +11,13 @@ public class CartItemSaveRequest
     public int Quantity { get; set; } = 1;
 }
 
+public class CartItemUpdateRequest
+{
+    public Guid CartItemId { get; set; }
+    public Guid? ProductAttributeId { get; set; }
+    public int Quantity { get; set; }
+}
+
 public class CartItemResponse
 {
     public Guid Id { get; set; }
@@ -25,6 +32,7 @@ public class CartItemResponse
 
 public class CartItemAttributeResponse
 {
-    public string Name { get; set; }  
-    public string Value { get; set; } 
+    public string Name { get; set; }
+    public string Value { get; set; }
+    public decimal PriceAdjustment { get; set; }
 }

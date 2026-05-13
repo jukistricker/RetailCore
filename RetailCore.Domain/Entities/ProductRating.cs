@@ -1,8 +1,6 @@
-using System;
-
 namespace RetailCore.Domain.Entities;
 
-public class ProductRating: BaseEntity
+public class ProductRating : BaseEntity
 {
     public Guid ProductId { get; set; }
     public Guid CustomerId { get; set; }
