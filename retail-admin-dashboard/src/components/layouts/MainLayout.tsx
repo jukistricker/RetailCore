@@ -1,117 +1,103 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/slices/accountSlice';
-import { RootState } from '../../store/store';
-import { CUSTOMER_BASE, ROUTES } from '../../config/constants/url_routes';
-import { ErrorBoundary } from '../../ErrorBoundary';
-import { AccountStatus } from '../../types/account';
+import React, { useState, useEffect } from "react";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../store/slices/accountSlice";
+import { RootState } from "../../store/store";
+import { CATEGORY_BASE, CUSTOMER_BASE, PRODUCT_BASE, ROUTES } from "../../config/constants/url_routes";
+import { ErrorBoundary } from "../../ErrorBoundary";
+import { AccountStatus } from "../../types/account";
 
 const MainLayout: React.FC = () => {
   const [isSidebarActive, setSidebarActive] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // Lấy dữ liệu từ Redux
-  const { user } = useSelector((state: RootState) => state.account);
-  const isAdmin = user?.role === 'Admin';
-  
-  const accountId = user?.id; 
+  const { account } = useSelector((state: RootState) => state.account);
+
+  const accountId = account?.id;
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute("data-bs-theme", theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   const handleLogout = () => {
-    document.documentElement.setAttribute('data-bs-theme', 'light');
+    document.documentElement.setAttribute("data-bs-theme", "light");
     dispatch(logout());
-    navigate(ROUTES.ACCOUNT.LOGIN);
+    navigate(ROUTES.AUTH.LOGIN);
   };
 
   return (
     <div id="wrapper">
       {/* Sidebar */}
-      <nav id="sidebar" className={isSidebarActive ? 'active-mobile' : ''}>
+      <nav id="sidebar" className={isSidebarActive ? "active-mobile" : ""}>
         <div className="sidebar-header">
           <h5 className="mb-0 fw-bold text-success">
-            <i className="bi bi-bank me-2"></i>BANK SIM
+            <i className="bi bi-bank me-2"></i>RETAIL ADMIN
           </h5>
         </div>
 
         <ul className="list-unstyled mt-3">
           <li>
-            <NavLink to={ROUTES.HOME} end className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink
+              to={ROUTES.HOME}
+              end
+              className={({ isActive }) => (isActive ? "active" : "")}
+            >
               <i className="bi bi-speedometer2"></i> Dashboard
             </NavLink>
           </li>
 
           {/* User's Personal Account Link */}
           <li>
-            <NavLink to={`${CUSTOMER_BASE}/${accountId}`} className={({ isActive }) => (isActive ? 'active' : '')}>
-              <i className="bi bi-person-badge"></i> My Account
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => (isActive ? "active" : "nav-link")}
+            >
+              <i className="bi bi-person-circle"></i>
+              <span>My Account</span>
             </NavLink>
           </li>
-
-          {/* --- ADMIN SECTION --- */}
-          {isAdmin && (
-            <>
-              <li className="px-3 small text-uppercase text-muted fw-bold mt-4 mb-2">Admin Dashboard</li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.DASHBOARD} end>
-                  <i className="bi bi-speedometer2"></i> Admin Home
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.PRODUCTS}>
-                  <i className="bi bi-box-seam"></i> Products
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.USERS}>
-                  <i className="bi bi-people"></i> Users
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.ORDERS}>
-                  <i className="bi bi-bag-check"></i> Orders
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.CATEGORIES}>
-                  <i className="bi bi-list"></i> Categories
-                </NavLink>
-              </li>
-              <li>
-                <NavLink to={ROUTES.ADMIN.REVIEWS}>
-                  <i className="bi bi-star"></i> Reviews
-                </NavLink>
-              </li>
-              
-              <li className="px-3 small text-uppercase text-muted fw-bold mt-4 mb-2">Banking</li>
-              <li>
-                <NavLink to={ROUTES.ACCOUNT.LIST} end>
-                  <i className="bi bi-people"></i> All Accounts
-                </NavLink>
-              </li>
-            </>
-          )}
-
-         
+          <li>
+            <NavLink to={PRODUCT_BASE}>
+              <i className="bi bi-box-seam"></i> Products
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to={ROUTES.CUSTOMER.LIST}>
+              <i className="bi bi-people"></i> Customers
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to={ROUTES.ADMIN.ORDERS}>
+              <i className="bi bi-bag-check"></i> Orders
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to={CATEGORY_BASE}>
+              <i className="bi bi-list"></i> Categories
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to={ROUTES.ADMIN.REVIEWS}>
+              <i className="bi bi-star"></i> Reviews
+            </NavLink>
+          </li>
         </ul>
       </nav>
 
       {/* Content Area */}
       <div id="content">
         <nav className="top-navbar shadow-sm d-flex align-items-center px-3">
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="btn btn-sm btn-outline-secondary d-md-none me-2"
             onClick={() => setSidebarActive(!isSidebarActive)}
           >
@@ -120,25 +106,26 @@ const MainLayout: React.FC = () => {
 
           <div className="ms-auto d-flex align-items-center">
             {/* Theme Switcher */}
-            <div 
-              id="themeSwitcher" 
-              className="me-3 btn btn-sm btn-outline-secondary border-0" 
-              style={{ cursor: 'pointer' }}
+            <div
+              id="themeSwitcher"
+              className="me-3 btn btn-sm btn-outline-secondary border-0"
+              style={{ cursor: "pointer" }}
               onClick={toggleTheme}
             >
-              <i className={`bi ${theme === 'light' ? 'bi-sun-fill' : 'bi-moon-stars-fill'}`}></i>
+              <i
+                className={`bi ${theme === "light" ? "bi-sun-fill" : "bi-moon-stars-fill"}`}
+              ></i>
             </div>
 
             {/* Profile Dropdown */}
             <div className="dropdown">
-              <button 
-                className="btn btn-link text-decoration-none dropdown-toggle text-body d-flex align-items-center shadow-none" 
-                type="button" 
+              <button
+                className="btn btn-link text-decoration-none dropdown-toggle text-body d-flex align-items-center shadow-none"
+                type="button"
                 data-bs-toggle="dropdown"
               >
                 <div className="text-end me-2 d-none d-sm-block">
-                  <div className="small fw-bold lh-1">{user?.owner_name}</div>
-                  <small className="text-muted" style={{ fontSize: '10px' }}>{user?.role}</small>
+                  <div className="small fw-bold lh-1">{account?.fullName}</div>
                 </div>
                 <i className="bi bi-person-circle fs-4"></i>
               </button>
@@ -146,11 +133,14 @@ const MainLayout: React.FC = () => {
                 <li>
                   <div className="dropdown-item-text border-bottom pb-2 mb-1">
                     <p className="mb-0 small text-muted">Signed in as</p>
-                    <strong>{user?.owner_name}</strong>
+                    <strong>{account?.fullName}</strong>
                   </div>
                 </li>
                 <li>
-                  <button onClick={handleLogout} className="dropdown-item text-danger">
+                  <button
+                    onClick={handleLogout}
+                    className="dropdown-item text-danger"
+                  >
                     <i className="bi bi-box-arrow-left me-2"></i>Log out
                   </button>
                 </li>
@@ -167,7 +157,13 @@ const MainLayout: React.FC = () => {
 
         <footer className="py-3 px-4 border-top bg-body-tertiary mt-auto">
           <div className="container-fluid text-center text-muted small">
-            &copy; 2026 - BankAccountSimulation - <a href="https://github.com/jukistricker" className="text-decoration-none">Privacy</a>
+            &copy; 2026 - Retail Core -{" "}
+            <a
+              href="https://github.com/jukistricker"
+              className="text-decoration-none"
+            >
+              Privacy
+            </a>
           </div>
         </footer>
       </div>

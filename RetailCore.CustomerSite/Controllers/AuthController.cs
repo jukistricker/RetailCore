@@ -18,8 +18,6 @@ public class AuthController : Controller
         _authApiService = authApiService;
     }
 
-    #region Logout
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
@@ -28,10 +26,6 @@ public class AuthController : Controller
 
         return RedirectToAction("Index", "Home");
     }
-
-    #endregion
-
-    #region Login
 
     [HttpGet]
     public IActionResult Login(string? returnUrl = null)
@@ -93,9 +87,6 @@ public class AuthController : Controller
         return View(request);
     }
 
-    #endregion
-
-    #region Register
 
     [HttpGet]
     public IActionResult Register()
@@ -121,5 +112,37 @@ public class AuthController : Controller
         return View(request);
     }
 
-    #endregion
+    [HttpPost]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var result = await _authApiService.RefreshTokenAsync();
+
+        if (result.IsSuccess && result.Value != null)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(15) 
+            };
+
+            Response.Cookies.Append("X-Access-Token", result.Value.AccessToken, cookieOptions);
+        
+            if (!string.IsNullOrEmpty(result.Value.RefreshToken))
+            {
+                Response.Cookies.Append("X-Refresh-Token", result.Value.RefreshToken, new CookieOptions 
+                { 
+                    HttpOnly = true, 
+                    Secure = true,
+                    Expires = DateTimeOffset.UtcNow.AddDays(7)
+                });
+            }
+
+            return Ok(result);
+        }
+
+        return Unauthorized(result);
+    }
+    
+    
 }

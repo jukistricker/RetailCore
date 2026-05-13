@@ -1,23 +1,56 @@
 @model LoginRequest
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Sign In";
     Layout = "_AuthLayout";
 }
 
-<form asp-action="Login" method="post">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+                    <!-- Tiêu đề -->
+                    <div class="text-center mb-4">
+                        <h3 class="fw-bold text-primary">Retail Core</h3>
+                        <p class="text-muted">Welcome back! Please enter your details.</p>
+                    </div>
 
-    <div class="form-group">
-        <label asp-for="Email"></label>
-        <input asp-for="Email" class="form-control"/>
-        <span asp-validation-for="Email" class="text-danger"></span>
+                    <form asp-action="Login" method="post">
+                        <!-- Hiển thị lỗi tổng quát (như sai pass/email) -->
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-semibold small text-uppercase"></label>
+                            <input asp-for="Email" class="form-control form-control-lg fs-6" placeholder="name@company.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            <input asp-for="Password" type="password" class="form-control form-control-lg fs-6" placeholder="••••••••" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg fs-6 fw-bold shadow-sm">Sign In</button>
+                        </div>
+
+                        <div class="text-center">
+                            <p class="text-muted small">
+                                Don't have an account? 
+                                <a asp-controller="Auth" asp-action="Register" class="text-primary fw-bold text-decoration-none">Create an account</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            
+        </div>
     </div>
+</div>
 
-    <div class="form-group">
-        <label asp-for="Password"></label>
-        <input asp-for="Password" type="password" class="form-control"/>
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Login</button>
-</form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

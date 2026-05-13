@@ -5,7 +5,7 @@ using RetailCore.Shared.ViewModels;
 
 namespace RetailCore.CustomerSite.Controllers;
 
-[Authorize]
+
 public class CartController : Controller
 {
     private readonly ICartItemApiService _cartItemApiService;

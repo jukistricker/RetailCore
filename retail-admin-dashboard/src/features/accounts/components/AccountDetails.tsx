@@ -1,104 +1,120 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchAccountById } from "../../../store/thunks/accountThunk";
-import { RootState, AppDispatch } from "../../../store/store";
-import {ActionTile} from "../../../components/ui/ActionTile";
-import { ROUTES } from "../../../config/constants/url_routes";
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store/store';
+import { UpdateAccountDialog } from './UpdateAccountDialog';
+import { Customer } from '../../../types/customer';
 
 export const AccountDetails = () => {
-  const { accountId } = useParams<{ accountId: string }>();
-  const dispatch = useDispatch<AppDispatch>();
-  
-  const { user: account, loading } = useSelector((state: RootState) => state.account);
+  const { account, loading } = useSelector((state: RootState) => state.account);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (accountId) {
-      dispatch(fetchAccountById(accountId));
-    }
-  }, [accountId, dispatch]);
+  if (!account && loading) {
+    return (
+      <div className="d-flex justify-content-center p-5">
+        <div className="spinner-border text-primary" role="status"></div>
+      </div>
+    );
+  }
 
-  if (loading) return <div className="text-center p-5"><div className="spinner-border text-primary"></div></div>;
-  
-  if (!account) return <div className="container mt-4"><div className="alert alert-warning">Account not found.</div></div>;
-
-  const isFrozen = account.status === 1;
+  const joinedDate = account?.createdDate 
+    ? new Date(account.createdDate).toLocaleDateString('en-US') 
+    : 'N/A';
 
   return (
-    <div className="container py-4">
-      <div className="card shadow-sm border-0 mb-4 overflow-hidden">
-        <div className="card-header py-3">
-          <h5 className="mb-0 fw-bold">
-            <i className="bi bi-info-circle me-2"></i>Account Details
-          </h5>
-        </div>
-        <div className="card-body p-4">
-          <div className="row align-items-center">
-            <div className="col-md-8">
-              <div className="d-flex align-items-center mb-4">
-                <div className="bg-primary text-white p-3 rounded-circle me-3">
-                  <i className="bi bi-wallet2 fs-2"></i>
-                </div>
-                <div>
-                  <h2 className="fw-bold mb-0 text-primary">{account.owner_name}</h2>
-                  <span className="text-muted small">Account Number: {account.account_number}</span>
-                </div>
-              </div>
+    <div className="container-fluid py-4">
+      <div className="row justify-content-center">
+        <div className="col-md-10 col-lg-8">
+          {/* Header */}
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2 className="fw-bold mb-1">Personal Details</h2>
+              <p className="text-muted small">Manage your account information</p>
+            </div>
+            <button 
+              className="btn btn-primary shadow-sm px-4" 
+              onClick={() => setIsModalOpen(true)}
+            >
+              <i className="bi bi-pencil-square me-2"></i>
+              Cập nhật thông tin
+            </button>
+          </div>
 
-              <div className="row g-3">
-                <div className="col-6 col-sm-4">
-                  <label className="text-muted small d-block">Status</label>
-                  <span className={`badge ${isFrozen ? "bg-danger" : "bg-success"} rounded-pill`}>
-                    {isFrozen ? "Frozen" : "Active"}
-                  </span>
+          <div className="row g-4">
+            {/* Cột trái: Thông tin chính */}
+            <div className="col-md-7">
+              <div className="card border-0 shadow-sm h-100">
+                <div className="card-header py-3">
+                  <h5 className="mb-0 fw-bold">Account Information</h5>
                 </div>
-                <div className="col-6 col-sm-4">
-                  <label className="text-muted small d-block">Created At</label>
-                  <span className="fw-bold">
-                    {new Date(account.created_at).toLocaleString("en-US")}
-                  </span>
+                <div className="card-body">
+                  <DetailItem label="Full Name" value={account?.fullName} />
+                  <DetailItem label="Email" value={account?.email} isEmail />
+                  <DetailItem label="Phone" value={account?.phone} placeholder="No data" />
+                  <DetailItem label="Address" value={account?.address} placeholder="No data" />
+                  <DetailItem label="City" value={account?.city} placeholder="No data" />
                 </div>
               </div>
             </div>
 
-            <div className="col-md-4 text-md-end mt-4 mt-md-0 border-start ps-md-4">
-              <label className="text-muted small d-block">Available Balance</label>
-              <h1 className={`fw-bold ${account.balance < 100 ? 'text-danger': 'text-success' } mb-0`}>
-                {account.balance.toLocaleString("en-US")} <small className="fs-6">$</small>
-              </h1>
+            {/* Cột phải: Trạng thái & Hệ thống */}
+            <div className="col-md-5">
+              <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body">
+                  <h6 className="text-muted mb-3 uppercase small fw-bold">Account Status</h6>
+                  <div className="d-flex align-items-center mb-3">
+                    {account?.isActive ? (
+                      <span className="badge bg-success-subtle text-success px-3 py-2">
+                        <i className="bi bi-check-circle-fill me-2"></i> Active
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger-subtle text-danger px-3 py-2">
+                        <i className="bi bi-x-circle-fill me-2"></i> Locked
+                      </span>
+                    )}
+                  </div>
+                  <p className="small text-muted mb-0">
+                    <i className="bi bi-calendar3 me-2"></i>
+                    Created Date: <strong>{joinedDate}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="card border-0 shadow-sm">
+                <div className="card-body">
+                  <h6 className="text-muted mb-3 uppercase small fw-bold">Role</h6>
+                  <div className="d-flex flex-wrap gap-2">
+                    {(account as any)?.roles?.length > 0 ? (
+                      (account as any).roles.map((role: string, idx: number) => (
+                        <span key={idx} className="badge bg-primary-subtle text-primary border border-primary-subtle">
+                          {role}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="badge bg-secondary-subtle text-secondary">Customer</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <h5 className="fw-bold mb-3 text-secondary">Quick Actions</h5>
-      <div className="row g-3">
-        <ActionTile 
-          to={ROUTES.TRANSACTIONS.DEPOSIT}
-          icon="bi-plus-circle" 
-          label="Deposit" 
-          description="Add funds to your account"
-          theme="text-success"
-          disabled={isFrozen}
-        />
-        <ActionTile 
-          to={ROUTES.TRANSACTIONS.WITHDRAW}
-          icon="bi-dash-circle" 
-          label="Withdraw" 
-          description="Take cash out of your account"
-          theme="text-danger"
-          disabled={isFrozen}
-        />
-        <ActionTile 
-          to={ROUTES.TRANSACTIONS.TRANSFER}
-          icon="bi-arrow-left-right" 
-          label="Transfer" 
-          description="Send money to another account"
-          theme="text-info"
-          disabled={isFrozen}
-        />
-      </div>
-      <hr className="my-5 opacity-25" />
+      <UpdateAccountDialog 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        currentData={account as Customer} 
+      />
     </div>
   );
 };
+
+const DetailItem = ({ label, value, isEmail, placeholder }: any) => (
+  <div className="mb-4">
+    <label className="form-label text-muted small mb-1">{label}</label>
+    <div className={`fw-semibold ${!value ? 'text-muted fst-italic fw-normal' : ''}`}>
+      {isEmail && value ? <i className="bi bi-envelope me-2 text-primary"></i> : null}
+      {value || placeholder}
+    </div>
+  </div>
+);

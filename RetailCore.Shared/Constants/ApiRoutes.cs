@@ -11,6 +11,7 @@ public static class ApiRoutes
         public const string Register = $"{AuthBase}/register";
         public const string Logout = $"{AuthBase}/logout";
         public const string RefreshToken = $"{AuthBase}/refresh-token";
+        public const string CurrentDetails = $"{AuthBase}/details";
     }
 
     public static class Products
@@ -26,5 +27,9 @@ public static class ApiRoutes
     public static class CartItems
     {
         public const string CartItemBase = $"{Base}/cart-items";
+    }
+    public static class Customers
+    {
+        public const string CustomerBase = $"{Base}/customers";
     }
 }

@@ -16,6 +16,7 @@ export interface CustomerResponse {
   city?: string;
   isActive: boolean;
   createdDate: string;
+  roles?: string[];
 }
 
 // --- LOGIN USER ---
@@ -24,10 +25,9 @@ export const loginUser = createAsyncThunk<CustomerResponse, LoginFormValues>(
   async (request, { rejectWithValue }) => {
     try {
       const user = await api.post<CustomerResponse>(SERVER_ROUTES.AUTH.LOGIN, request);
-
-      genericStorage.save(USER_KEY, user);
       return user;
     } catch (error: any) {
+      console.log(error);
       return rejectWithValue(error.response?.data || { message: "Login failed" });
     }
   }
@@ -85,6 +85,33 @@ export const toggleAccountStatus = createAsyncThunk<CustomerResponse, { id: stri
       return await api.put<CustomerResponse>(`/api/customers?id=${id}`, updateData);
     } catch (error: any) {
       return rejectWithValue(error.response?.data);
+    }
+  }
+);
+
+// --- REFRESH TOKEN ---
+export const refreshToken = createAsyncThunk<CustomerResponse, void>(
+  "auth/refreshToken",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.post<CustomerResponse>(`${SERVER_ROUTES.AUTH.REFRESH_TOKEN}`, {}); 
+      return response;
+    } catch (error: any) {
+      localStorage.remove(USER_KEY);
+      return rejectWithValue(error.response?.data || "Session expired");
+    }
+  }
+);
+
+export const currentDetails = createAsyncThunk<CustomerResponse, void>(
+  "auth/currentDetails",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response= await api.get<CustomerResponse>(`${SERVER_ROUTES.AUTH.CURRENT_DETAILS}`);
+      localStorage.setItem(USER_KEY, JSON.stringify(response));
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Session expired");
     }
   }
 );

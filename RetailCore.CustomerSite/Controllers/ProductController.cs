@@ -40,7 +40,6 @@ public class ProductController : Controller
         return View(result.Value);
     }
 
-    // API nội bộ cho trang chủ gọi lấy sản phẩm nổi bật
     [HttpGet("featured")]
     public async Task<IActionResult> Featured(int count = 4)
     {

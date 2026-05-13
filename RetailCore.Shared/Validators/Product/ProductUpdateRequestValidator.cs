@@ -30,8 +30,6 @@ public class ProductUpdateRequestValidator : AbstractValidator<ProductUpdateRequ
         RuleFor(x => x.CategoryId)
             .NotEmpty().WithMessage("Category is required");
 
-        RuleFor(x => x.ThumbnailUrl)
-            .NotEmpty().WithMessage("ThumbnailUrl is required");
 
         RuleFor(x => x.IsFeatured)
             .NotEmpty().WithMessage("IsFeatured is required");

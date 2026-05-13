@@ -11,6 +11,7 @@ public class ProductSummaryResponse
     public string Slug { get; set; }
     public decimal Price { get; set; }
     public string? ThumbnailUrl { get; set; }
+    public int Stock { get; set; }
 }
 
 public record ProductDetailResponse

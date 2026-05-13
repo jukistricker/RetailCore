@@ -42,30 +42,31 @@ public async Task<Result<CustomerResponse>> GetUserByIdAsync(Guid id)
 
 public async Task<Result<bool>> UpdateUserAsync(Guid id, UpdateCustomerRequest request)
 {
-    Guid customerId = _httpContextAccessor.HttpContext.User.GetCustomerId();
-    var user = await _userManager.FindByIdAsync(id.ToString());
+    var customer = await _customerRepository.GetByIdAsync(id);
+    if (customer == null) 
+        return Result<bool>.Failure("User", "User not found");
+    
+    var user = await _userManager.FindByIdAsync(customer.UserId.ToString());
     if (user == null) 
         return Result<bool>.Failure("User", "User not found");
 
-    var customer = await _dbContext.Customers.FirstOrDefaultAsync(c => c.UserId == id);
-    if (customer == null)
-        return Result<bool>.Failure("Customer", "Customer profile not found");
 
     using var transaction = await _dbContext.Database.BeginTransactionAsync();
     try
     {
-        if (user.Email != request.Email)
+        if (customer.Email != request.Email)
         {
             var emailExists = await _userManager.FindByEmailAsync(request.Email);
             if (emailExists != null&&emailExists.Id != id) 
                 return Result<bool>.Failure("Email", "Email already in use");
 
             user.Email = request.Email;
-            user.UserName = request.Email;
             await _userManager.UpdateAsync(user);
+            customer.Email = request.Email;
+            _customerRepository.Update(customer);
         }
 
-        CustomerMapping.ToCustomerUpdate(customer, request, customerId);
+        CustomerMapping.ToCustomerUpdate(customer, request, customer.Id);
 
         _dbContext.Customers.Update(customer);
         await _dbContext.SaveChangesAsync();

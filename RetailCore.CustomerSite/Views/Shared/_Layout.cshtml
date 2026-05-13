@@ -67,16 +67,48 @@
 <script>
     (function() {
         const { fetch: originalFetch } = window;
+
         window.fetch = async (...args) => {
-            let response = await originalFetch(...args);
-            
-            if (response.status === 401) {
-                const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
-                window.location.href = `/Auth/Login?ReturnUrl=${returnUrl}`;
+            let [resource, config] = args;
+            if (!config) config = {};
+
+            config.credentials = 'include';
+
+            try {
+                const response = await originalFetch(resource, config);
+
+                const isRefreshRequest = typeof resource === 'string' && resource.includes('/Auth/RefreshToken');
+                
+                if (response.status === 401 && !isRefreshRequest) {
+                    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+                    window.location.href = `/Auth/Login?ReturnUrl=${returnUrl}`;
+                }
+
+                return response;
+            } catch (error) {
+                return Promise.reject(error);
             }
-            
-            return response;
         };
+
+        async function performRefreshToken() {
+            try {
+                const response = await fetch('/Auth/RefreshToken', { 
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' } // Giúp server nhận diện là AJAX
+                });
+                
+                if (response.ok) {
+                    console.log("Token refreshed at: " + new Date().toLocaleTimeString());
+                }
+            } catch (error) {
+                console.error("Token refresh heartbeat failed.");
+            }
+        }
+
+        setInterval(performRefreshToken, 600000);
+        
+        performRefreshToken(); 
+
     })();
 </script>
 @await RenderSectionAsync("Scripts", false)

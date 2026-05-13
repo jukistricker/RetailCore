@@ -1,0 +1,19 @@
+@model IEnumerable<RetailCore.Shared.DTOs.CategoryResponse>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="catDropdown" role="button" data-bs-toggle="dropdown">
+        Categories
+    </a>
+    <ul class="dropdown-menu">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var cat in Model)
+            {
+                <li>
+                    <a class="dropdown-item" href="/Search?categoryId=@cat.Id">@cat.Name</a>
+                </li>
+            }
+        }
+        <li><hr class="dropdown-divider"></li>
+    </ul>
+</li>

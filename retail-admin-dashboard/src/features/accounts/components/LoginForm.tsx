@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { loginUser } from "../../../store/thunks/accountThunk";
+import { currentDetails, loginUser } from "../../../store/thunks/accountThunk";
 import { useNavigate, Link } from "react-router-dom";
 import { LoginFormValues, loginSchema } from "../types";
 import { ROUTES } from "../../../config/constants/url_routes";
@@ -12,15 +12,15 @@ import { RootState } from "../../../store/store";
 export const LoginForm = () => {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
-  const { loading, error, user } = useSelector(
+  const { loading, error, account } = useSelector(
     (state: RootState) => state.account,
   );
 
   useEffect(() => {
-    if (user) {
+    if (account) {
       navigate(ROUTES.HOME);
     }
-  }, [user, navigate]);
+  }, [account, navigate]);
 
   const {
     register,
@@ -38,6 +38,7 @@ export const LoginForm = () => {
     const result = await dispatch(loginUser(data));
     if (loginUser.fulfilled.match(result)) {
       navigate(ROUTES.HOME);
+      await dispatch(currentDetails());
     }
   };
 
@@ -112,17 +113,7 @@ export const LoginForm = () => {
                   </button>
                 </div>
 
-                <div className="text-center mt-3">
-                  <span className="small text-muted">
-                    Don't have an account?{" "}
-                  </span>
-                  <Link
-                    to={ROUTES.AUTH.REGISTER}
-                    className="small text-decoration-none fw-bold"
-                  >
-                    Create new account
-                  </Link>
-                </div>
+                
               </form>
             </div>
 

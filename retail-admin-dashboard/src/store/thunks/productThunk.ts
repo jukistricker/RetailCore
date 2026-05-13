@@ -1,10 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosClient from '../../lib/axios';
 import { Product, ProductCreateRequest, ProductUpdateRequest } from '../../types/product';
-import { ApiResponse, PagingResponse } from '../../types/response';
+import { PagingResponse } from '../../types/response';
 import { SERVER_PRODUCTS } from '../../config/constants/server_routes';
 
-// 1. Lấy danh sách sản phẩm (Phân trang)
 export const fetchProducts = createAsyncThunk<
   PagingResponse<Product>,
   { pageNumber?: number; pageSize?: number; categoryId?: string; slug?: string },
@@ -13,7 +12,7 @@ export const fetchProducts = createAsyncThunk<
   'product/fetchProducts',
   async (params, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.get<any, ApiResponse<PagingResponse<Product>>>(SERVER_PRODUCTS, {
+      const response = await axiosClient.get<any, PagingResponse<Product>>(SERVER_PRODUCTS, {
         params: {
           PageNumber: params.pageNumber ?? 1,
           PageSize: params.pageSize ?? 10,
@@ -21,14 +20,13 @@ export const fetchProducts = createAsyncThunk<
           slug: params.slug
         },
       });
-      return response.value;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch products');
     }
   }
 );
 
-// 2. Tạo sản phẩm (Sử dụng FormData cho [FromForm])
 export const createProduct = createAsyncThunk<
   Product,
   ProductCreateRequest,
@@ -41,22 +39,21 @@ export const createProduct = createAsyncThunk<
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'images' && value) {
           (value as File[]).forEach(file => formData.append('images', file));
-        } else if (value !== undefined) {
+        } else if (value !== undefined && value !== null) {
           formData.append(key, value.toString());
         }
       });
 
-      const response = await axiosClient.post<any, ApiResponse<Product>>(SERVER_PRODUCTS, formData, {
+      const response = await axiosClient.post<any, Product>(SERVER_PRODUCTS, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      return response.value;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to create product');
     }
   }
 );
 
-// 3. Cập nhật sản phẩm
 export const updateProduct = createAsyncThunk<
   Product,
   ProductUpdateRequest,
@@ -69,24 +66,23 @@ export const updateProduct = createAsyncThunk<
       Object.entries(data).forEach(([key, value]) => {
         if (key === 'images' && value) {
           (value as File[]).forEach(file => formData.append('images', file));
-        } else if (value !== undefined) {
+        } else if (value !== undefined && value !== null) {
           formData.append(key, value.toString());
         }
       });
 
-      const response = await axiosClient.put<any, ApiResponse<Product>>(
+      const response = await axiosClient.put<any, Product>(
         `${SERVER_PRODUCTS}/${data.id}`, 
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      return response.value;
+      return response;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to update product');
     }
   }
 );
 
-// 4. Xóa sản phẩm
 export const deleteProduct = createAsyncThunk<
   string,
   string,
@@ -95,7 +91,7 @@ export const deleteProduct = createAsyncThunk<
   'product/deleteProduct',
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.delete<any, ApiResponse<boolean>>(`${SERVER_PRODUCTS}/${id}`);
+      await axiosClient.delete<any, boolean>(`${SERVER_PRODUCTS}/${id}`);
       return id;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to delete product');

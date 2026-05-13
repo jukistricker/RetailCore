@@ -9,6 +9,8 @@ export const SERVER_ROUTES ={
     AUTH: {
         LOGIN: `${SERVER_AUTH}/login`,
         REGISTER: `${SERVER_AUTH}/register`,
+        REFRESH_TOKEN: `${SERVER_AUTH}/refresh-token`,
+        CURRENT_DETAILS: `${SERVER_AUTH}/details`
     },
     CUSTOMER: {
         LIST: `${SERVER_CUSTOMERS}`,

@@ -1,18 +1,37 @@
 import axios from 'axios';
 
-const apiBaseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5016';
+export const apiBaseURL = import.meta.env.VITE_API_BASE_URL;
 
 const axiosClient = axios.create({
   baseURL: apiBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 axiosClient.interceptors.response.use(
-  (response) => response.data, 
+  (response) => {
+    if (response.data && response.data.hasOwnProperty('value')) {
+      return response.data.value; 
+    }
+    return response;
+  },
   (error) => {
-    return Promise.reject(error.response?.data || 'Network Error');
+    let errorMessage = "Đã có lỗi xảy ra";
+
+    if (error.response && error.response.data) {
+      const data = error.response.data;
+      
+      if (Array.isArray(data.errors) && data.errors.length > 0) {
+        errorMessage = data.errors[0].message;
+      } 
+      else if (typeof data.errors === 'string') {
+        errorMessage = data.errors;
+      }
+    }
+
+    return Promise.reject(new Error(errorMessage));
   }
 );
 

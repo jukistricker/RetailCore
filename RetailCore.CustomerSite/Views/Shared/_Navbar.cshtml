@@ -10,34 +10,17 @@
         </button>
 
         <div class="collapse navbar-collapse" id="navbarContent">
-            <!-- Danh mục (Dropdown) -->
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="catDropdown" role="button"
-                       data-bs-toggle="dropdown">
-                        Categories
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/Category/Laptops">Laptops</a></li>
-                        <li><a class="dropdown-item" href="/Category/Phones">Smartphones</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item" href="/Products">All Categories</a></li>
-                    </ul>
-                </li>
-            </ul>
+            @await Component.InvokeAsync("CategoryMenu")
 
             <!-- Thanh tìm kiếm -->
-            <form class="d-flex search-container" action="/Search" method="GET">
+            <form class="d-flex search-container mx-auto" action="/Search" method="GET" style="flex-grow: 1; max-width: 500px;">
                 <input class="form-control search-input" type="search" placeholder="Search products..." name="q">
                 <button class="search-btn" type="submit">
                     <i class="bi bi-search"></i>
                 </button>
             </form>
 
-            <!-- Actions -->
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center ms-auto">
                 <!-- Theme Toggle -->
                 <button id="theme-toggle" class="btn nav-icon-link border-0 bg-transparent"
                         title="Toggle Light/Dark Mode">
@@ -47,7 +30,7 @@
 
                 <!-- Cart -->
                 <a href="/Cart" class="nav-icon-link">
-                    <i class="bi bi-cart3"></i>
+                    <i class="bi bi-cart"></i>
                     <span class="badge rounded-pill bg-danger badge-count">3</span>
                 </a>
 
@@ -57,12 +40,19 @@
                         <i class="bi bi-person"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/Account/Profile">My Profile</a></li>
+                        <li><a class="dropdown-item" href="/Customer/Profile">My Profile</a></li>
                         <li><a class="dropdown-item" href="/Orders">My Orders</a></li>
                         <li>
                             <hr class="dropdown-divider">
                         </li>
-                        <li><a class="dropdown-item text-danger" href="/Account/Logout">Logout</a></li>
+                        <li>
+                            <form asp-controller="Auth" asp-action="Logout" method="post" id="logoutForm" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="dropdown-item text-danger border-0 bg-transparent">
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             </div>

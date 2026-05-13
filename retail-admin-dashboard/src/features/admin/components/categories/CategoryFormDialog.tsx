@@ -1,149 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../../../store/store';
-import { createCategory, updateCategory } from '../../../../store/thunks/categoryThunk';
-import { Category, CreateCategoryRequest } from '../../../../types/category';
-import {BaseDialog} from '../../../../components/ui/BaseDialog';
-import toast from 'react-hot-toast';
+// components/categories/CategoryFormDialog.tsx
+import React, { useState } from 'react';
+import { CreateCategoryRequest, UpdateCategoryRequest, Category } from '../../../../types/category';
 
-interface CategoryFormDialogProps {
-  category: Category | null;
+interface Props {
+  category?: Category | null;
   onClose: () => void;
+  onSave: (data: any) => void;
 }
 
-const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({ category, onClose }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const [formData, setFormData] = useState<CreateCategoryRequest>({
-    name: '',
-    description: '',
-    image: '',
+export const CategoryFormDialog = ({ category, onClose, onSave }: Props) => {
+  const [formData, setFormData] = useState({
+    name: category?.name || '',
+    description: category?.description || '',
+    sortOrder: category?.sortOrder || 0,
   });
-  const [status, setStatus] = useState(category?.status || 'active');
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (category) {
-      setFormData({
-        name: category.name,
-        description: category.description || '',
-        image: category.image || '',
-      });
-      setStatus(category.status || 'active');
-    }
-  }, [category]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (category) {
-        const result = await dispatch(updateCategory({ ...formData, id: category.id, status: status as any }));
-        if (updateCategory.fulfilled.match(result)) {
-          toast.success('Cập nhật danh mục thành công!');
-          onClose();
-        }
-      } else {
-        const result = await dispatch(createCategory(formData));
-        if (createCategory.fulfilled.match(result)) {
-          toast.success('Thêm danh mục thành công!');
-          onClose();
-        }
-      }
-    } catch (error) {
-      toast.error('Có lỗi xảy ra!');
-    } finally {
-      setLoading(false);
+    if (category) {
+      const updateData: UpdateCategoryRequest = { id: category.id, ...formData };
+      onSave(updateData);
+    } else {
+      const createData: CreateCategoryRequest = formData;
+      onSave(createData);
     }
   };
 
   return (
-    <BaseDialog
-      isOpen={true}
-      title={category ? 'Chỉnh Sửa Danh Mục' : 'Thêm Danh Mục Mới'}
-      onClose={onClose}
-    >
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="name" className="form-label">
-            Tên Danh Mục <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="description" className="form-label">
-            Mô Tả
-          </label>
-          <textarea
-            className="form-control"
-            id="description"
-            name="description"
-            rows={3}
-            value={formData.description}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="image" className="form-label">
-            URL Hình Ảnh
-          </label>
-          <input
-            type="url"
-            className="form-control"
-            id="image"
-            name="image"
-            value={formData.image}
-            onChange={handleChange}
-          />
-        </div>
-
-        {category && (
-          <div className="mb-3">
-            <label htmlFor="status" className="form-label">
-              Trạng Thái <span className="text-danger">*</span>
-            </label>
-            <select
-              className="form-select"
-              id="status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              required
-            >
-              <option value="active">Hoạt Động</option>
-              <option value="inactive">Không Hoạt Động</option>
-            </select>
+    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <form className="modal-content border-0 shadow-lg" onSubmit={handleSubmit}>
+          <div className="modal-header bg-success text-white py-3">
+            <h5 className="modal-title fw-bold">
+              <i className={`bi ${category ? 'bi-pencil-square' : 'bi-plus-circle'} me-2`}></i>
+              {category ? 'Chỉnh Sửa Danh Mục' : 'Thêm Danh Mục Mới'}
+            </h5>
+            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
-        )}
+          
+          <div className="modal-body p-4">
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Tên danh mục</label>
+              <input 
+                type="text" 
+                className="form-control shadow-sm" 
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                required 
+                placeholder="VD: Điện thoại, Laptop..."
+              />
+            </div>
+            
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Thứ tự hiển thị</label>
+              <input 
+                type="number" 
+                className="form-control shadow-sm" 
+                value={formData.sortOrder}
+                onChange={e => setFormData({ ...formData, sortOrder: +e.target.value })}
+              />
+            </div>
 
-        <div className="d-flex gap-2 justify-content-end">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Hủy
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Đang Lưu...' : 'Lưu'}
-          </button>
-        </div>
-      </form>
-    </BaseDialog>
+            <div className="mb-0">
+              <label className="form-label fw-semibold">Mô tả</label>
+              <textarea 
+                className="form-control shadow-sm" 
+                rows={3}
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Nhập mô tả ngắn về danh mục..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div className="modal-footer py-3">
+            <button type="button" className="btn btn-link text-secondary text-decoration-none" onClick={onClose}>Hủy</button>
+            <button type="submit" className="btn btn-success px-4 shadow-sm">
+              <i className="bi bi-save me-2"></i>Lưu thay đổi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
-
-export default CategoryFormDialog;

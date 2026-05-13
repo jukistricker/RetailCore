@@ -1,183 +1,232 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../../../store/store';
-import { createProduct, updateProduct } from '../../../../store/thunks/productThunk';
-import { Product, CreateProductRequest } from '../../../../types/product';
-import {BaseDialog} from '../../../../components/ui/BaseDialog';
-import toast from 'react-hot-toast';
+// components/products/ProductFormDialog.tsx
+import React, { useState, useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../../store/store';
+import { fetchCategories } from '../../../../store/thunks/categoryThunk';
+import { ProductAttributeManager } from './ProductAttributeManager';
 
-interface ProductFormDialogProps {
-  product: Product | null;
-  onClose: () => void;
-}
-
-const ProductFormDialog: React.FC<ProductFormDialogProps> = ({ product, onClose }) => {
+export const ProductFormDialog = ({ product, onClose, onSave }: any) => {
   const dispatch = useDispatch<AppDispatch>();
-  const [formData, setFormData] = useState<CreateProductRequest>({
-    name: '',
-    description: '',
-    price: 0,
-    stock: 0,
-    categoryId: '',
-    sku: '',
+  const { items: categories, loading: categoryLoading } = useSelector((state: RootState) => state.category);
+
+  const [formData, setFormData] = useState({
+    name: product?.name || '',
+    slug: product?.slug || '',
+    price: product?.price || 0,
+    stock: product?.stock || 0,
+    isFeatured: product?.isFeatured || false, // Thêm field mới
+    categoryId: product?.categoryId || '',
+    attributes: product?.attributes || '[]'
   });
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        stock: product.stock,
-        categoryId: product.categoryId,
-        sku: product.sku || '',
-      });
-    }
-  }, [product]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const generateSlug = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'stock' ? parseFloat(value) : value,
+      name,
+      slug: product ? prev.slug : generateSlug(name)
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCategories({ pageNumber: 1, pageSize: 10, search: searchTerm }));
+    }, 400);
 
-    try {
-      if (product) {
-        const result = await dispatch(updateProduct({ ...formData, id: product.id }));
-        if (updateProduct.fulfilled.match(result)) {
-          toast.success('Cập nhật sản phẩm thành công!');
-          onClose();
-        }
-      } else {
-        const result = await dispatch(createProduct(formData));
-        if (createProduct.fulfilled.match(result)) {
-          toast.success('Thêm sản phẩm thành công!');
-          onClose();
-        }
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, dispatch]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
       }
-    } catch (error) {
-      toast.error('Có lỗi xảy ra!');
-    } finally {
-      setLoading(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedFiles(filesArray);
+      const newPreviews = filesArray.map(file => URL.createObjectURL(file));
+      setPreviews(newPreviews);
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.categoryId) {
+      alert("Vui lòng chọn danh mục!");
+      return;
+    }
+    // Payload tự động bao gồm isFeatured từ formData
+    onSave({ ...formData, images: selectedFiles });
+  };
+
+  const selectedCategory = categories.find(c => c.id === formData.categoryId);
+
   return (
-    <BaseDialog
-      isOpen={true}
-      title={product ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
-      onClose={onClose}
-    >
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="name" className="form-label">
-            Tên Sản Phẩm <span className="text-danger">*</span>
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="description" className="form-label">
-            Mô Tả
-          </label>
-          <textarea
-            className="form-control"
-            id="description"
-            name="description"
-            rows={3}
-            value={formData.description}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label htmlFor="price" className="form-label">
-              Giá <span className="text-danger">*</span>
-            </label>
-            <input
-              type="number"
-              className="form-control"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              step="0.01"
-              required
-            />
+    <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+      <div className="modal-dialog modal-xl modal-dialog-centered">
+        <form className="modal-content shadow-lg border-0" onSubmit={handleSubmit}>
+          {/* Header */}
+          <div className="modal-header bg-primary text-white py-3">
+            <h5 className="modal-title fw-bold">
+              <i className="bi bi-box-seam me-2"></i>
+              {product ? 'Cập Nhật Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
+            </h5>
+            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
           </div>
-          <div className="col-md-6 mb-3">
-            <label htmlFor="stock" className="form-label">
-              Số Lượng Tồn <span className="text-danger">*</span>
-            </label>
-            <input
-              type="number"
-              className="form-control"
-              id="stock"
-              name="stock"
-              value={formData.stock}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
 
-        <div className="row">
-          <div className="col-md-6 mb-3">
-            <label htmlFor="categoryId" className="form-label">
-              Danh Mục <span className="text-danger">*</span>
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="categoryId"
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="col-md-6 mb-3">
-            <label htmlFor="sku" className="form-label">
-              SKU
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
+          <div className="modal-body p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">Tên sản phẩm</label>
+                <input className="form-control" value={formData.name} required
+                  onChange={handleNameChange} placeholder="Ví dụ: iPhone 15 Pro Max..." />
+              </div>
 
-        <div className="d-flex gap-2 justify-content-end">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
-            Hủy
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Đang Lưu...' : 'Lưu'}
-          </button>
-        </div>
-      </form>
-    </BaseDialog>
+              <div className="col-md-6">
+                <label className="form-label fw-semibold">Slug (Đường dẫn)</label>
+                <input className="form-control" value={formData.slug} required
+                  onChange={e => setFormData({ ...formData, slug: e.target.value })} />
+              </div>
+              
+              <div className="col-md-6 position-relative" ref={dropdownRef}>
+                <label className="form-label fw-semibold">Danh mục</label>
+                <div className="input-group">
+                  <span className="input-group-text"><i className="bi bi-search"></i></span>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder={selectedCategory ? `Đang chọn: ${selectedCategory.name}` : "Tìm kiếm danh mục..."}
+                    value={searchTerm}
+                    onFocus={() => setShowDropdown(true)}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                {/* Dropdown menu giữ nguyên... */}
+                {showDropdown && (
+                   <div className="list-group position-absolute w-100 shadow-lg mt-1" style={{ zIndex: 1100, maxHeight: '200px', overflowY: 'auto' }}>
+                    {categoryLoading ? (
+                      <div className="list-group-item text-center"><div className="spinner-border spinner-border-sm"></div></div>
+                    ) : categories.length > 0 ? (
+                      categories.map(cat => (
+                        <button key={cat.id} type="button"
+                          className={`list-group-item list-group-item-action ${formData.categoryId === cat.id ? 'active' : ''}`}
+                          onClick={() => {
+                            setFormData({ ...formData, categoryId: cat.id });
+                            setShowDropdown(false);
+                            setSearchTerm('');
+                          }}
+                        >
+                          {cat.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="list-group-item text-muted">Không tìm thấy danh mục</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold">Giá gốc</label>
+                <div className="input-group">
+                  <input type="number" className="form-control" value={formData.price}
+                    onChange={e => setFormData({ ...formData, price: +e.target.value })} />
+                  <span className="input-group-text">đ</span>
+                </div>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label fw-semibold">Kho hàng</label>
+                <input type="number" className="form-control" value={formData.stock}
+                  onChange={e => setFormData({ ...formData, stock: +e.target.value })} />
+              </div>
+
+              {/* Dấu tích chọn isFeatured */}
+              <div className="col-md-2 d-flex align-items-end pb-2">
+                <div className="form-check form-switch border rounded p-2 w-100 d-flex align-items-center justify-content-center">
+                  <input 
+                    className="form-check-input me-2" 
+                    type="checkbox" 
+                    id="isFeatured" 
+                    checked={formData.isFeatured}
+                    onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    style={{ cursor: 'pointer', width: '2.5em', height: '1.25em' }}
+                  />
+                  <label className="form-check-label fw-bold text-primary mb-0" htmlFor="isFeatured" style={{ cursor: 'pointer' }}>
+                    Nổi bật
+                  </label>
+                </div>
+              </div>
+
+              {/* Ảnh sản phẩm và Attribute Manager giữ nguyên... */}
+              <div className="col-md-12 my-3">
+                <label className="form-label fw-semibold d-block">Ảnh sản phẩm</label>
+                <div className="upload-container border border-dashed rounded p-3 text-center">
+                  <input type="file" multiple id="productImages" className="form-control d-none" accept="image/*" onChange={handleFileChange} />
+                  <label htmlFor="productImages" className="btn btn-outline-primary mb-2">
+                    <i className="bi bi-cloud-arrow-up me-2"></i>Chọn ảnh từ thiết bị
+                  </label>
+                  <div className="d-flex flex-wrap gap-2 mt-3 justify-content-center">
+                    {previews.map((url, index) => (
+                      <div key={index} className="position-relative">
+                        <img src={url} className="rounded shadow-sm border" style={{ width: '80px', height: '80px', objectFit: 'cover' }} alt="" />
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setPreviews(previews.filter((_, i) => i !== index));
+                            setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+                          }}>
+                          &times;
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <hr className="my-4" />
+            <div className=" rounded border p-3">
+              <ProductAttributeManager onChange={(json) => setFormData({ ...formData, attributes: json })} />
+            </div>
+          </div>
+
+          <div className="modal-footer py-3">
+            <button type="button" className="btn btn-link text-secondary" onClick={onClose}>Hủy bỏ</button>
+            <button type="submit" className="btn btn-primary px-4 shadow-sm" disabled={!formData.categoryId}>
+              <i className="bi bi-check2-circle me-2"></i>Lưu sản phẩm
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <style>{`
+        .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+        .form-check-input:checked { background-color: #0d6efd; border-color: #0d6efd; }
+      `}</style>
+    </div>
   );
 };
-
-export default ProductFormDialog;

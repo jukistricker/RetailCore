@@ -25,6 +25,11 @@ public class CategoryService : ICategoryService
     public async Task<Result<PagingResponse<CategoryResponse>>> GetByPageAsync(PagingRequest request)
     {
         var query = _categoryRepository.GetQueryable().AsNoTracking();
+        
+        query = query.OrderBy(c=>c.SortOrder);
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+            query = query.Where(p => p.Name.Contains(request.Search));
         var response = await _categoryRepository.GetByPageAsync(query, request.PageNumber, request.PageSize);
         return Result<PagingResponse<CategoryResponse>>.Success(CategoryMapping.ToPagingResponse(response));
     }

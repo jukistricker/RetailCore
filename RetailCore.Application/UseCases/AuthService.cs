@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using RetailCore.Application.Extensions;
 using RetailCore.Domain.Constants;
 using RetailCore.Infrastructure.Data.Configurations.Identity;
 
@@ -118,18 +119,33 @@ public class AuthService : IAuthService
             {
                 Id = Guid.CreateVersion7(),
                 UserName = request.Email,
-                Email = request.Email
+                Email = request.Email,
+                EmailConfirmed = true 
             };
 
-            await _userManager.CreateAsync(user, request.Password);
-            await _userManager.AddToRoleAsync(user, Roles.Customer);
+            var createResult = await _userManager.CreateAsync(user, request.Password);
+        
+            if (!createResult.Succeeded)
+            {
+                var errors = createResult.Errors.Select(e => new ErrorDetail { Key = e.Code, Message = e.Description }).ToList();
+                return Result<bool>.Failure(errors);
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, Roles.Customer);
+            if (!roleResult.Succeeded)
+            {
+                await transaction.RollbackAsync();
+                return Result<bool>.Failure("Role", "Could not assign role to user");
+            }
 
             var customer = new Customer
             {
                 Id = Guid.CreateVersion7(),
-                UserId = user.Id,
+                UserId = user.Id, 
                 FullName = request.FullName,
-                Email = request.Email
+                Email = request.Email,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow,
             };
 
             await _customerRepository.AddAsync(customer);
@@ -141,7 +157,7 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
-            return Result<bool>.Failure(null, "A system error occurred", 500);
+            return Result<bool>.Failure(null, $"System error: {ex.Message}", 500);
         }
     }
 
@@ -166,5 +182,91 @@ public class AuthService : IAuthService
         response.Cookies.Delete("XSRF-TOKEN");
 
         return Result<bool>.Success(true, 204);
+    }
+    
+    public async Task<Result<LoginResponse>> RefreshTokenAsync()
+{
+    var request = _httpContextAccessor.HttpContext?.Request;
+    var refreshToken = request?.Cookies["X-Refresh-Token"];
+
+    if (string.IsNullOrEmpty(refreshToken))
+        return Result<LoginResponse>.Failure(null, "Refresh token is missing", 401);
+
+    var disco = await _httpClient.GetDiscoveryDocumentAsync(_identityOptions.Authority);
+    if (disco.IsError) return Result<LoginResponse>.Failure(null, "Identity Server unavailable", 500);
+
+    var tokenResponse = await _httpClient.RequestRefreshTokenAsync(new RefreshTokenRequest
+    {
+        Address = disco.TokenEndpoint,
+        ClientId = _identityOptions.AdminClientId,
+        ClientSecret = _identityOptions.AdminSecret,
+        RefreshToken = refreshToken
+    });
+
+    if (tokenResponse.IsError)
+        return Result<LoginResponse>.Failure(null, "Invalid or expired refresh token", 401);
+
+    var accessTokenOptions = new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = false,
+        SameSite = SameSiteMode.Lax,
+        Expires = DateTimeOffset.UtcNow.AddSeconds(tokenResponse.ExpiresIn)
+    };
+
+    var newRefreshTokenOptions = new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = false,
+        SameSite = SameSiteMode.Lax,
+        Expires = DateTimeOffset.UtcNow.AddDays(7)
+    };
+
+    var response = _httpContextAccessor.HttpContext?.Response;
+    response?.Cookies.Append("X-Access-Token", tokenResponse.AccessToken, accessTokenOptions);
+    
+    if (!string.IsNullOrEmpty(tokenResponse.RefreshToken))
+    {
+        response?.Cookies.Append("X-Refresh-Token", tokenResponse.RefreshToken, newRefreshTokenOptions);
+    }
+
+    return Result<LoginResponse>.Success(new LoginResponse
+    {
+        AccessToken = tokenResponse.AccessToken,
+        RefreshToken = tokenResponse.RefreshToken ?? refreshToken,
+        AccessTokenExpire = tokenResponse.ExpiresIn,
+        RefreshTokenExpire = (int)(newRefreshTokenOptions.Expires.Value - DateTimeOffset.UtcNow).TotalSeconds
+    });
+}
+
+    public async Task<Result<CustomerResponse>> GetCurrentDetailsAsync()
+    {
+        Guid? customerId = _httpContextAccessor.HttpContext?.User.GetCustomerId();
+        if (!customerId.HasValue) 
+            return Result<CustomerResponse>.Failure(null, "User not found", 401);
+        Customer? customer = await _customerRepository.GetByIdAsync(customerId.Value);
+        if (customer == null) 
+            return Result<CustomerResponse>.Failure(null, "User does not exist in system");
+        var user = await _userManager.FindByIdAsync(customer.UserId.ToString());
+        if (user == null) 
+            return Result<CustomerResponse>.Failure(null, "User does not exist in system");
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        var response = new CustomerResponse
+        {
+            Id = customer.Id,
+            UserId = user.Id,
+            Email = customer.Email,
+            FullName = customer.FullName,
+            Roles = roles.ToList(),
+            IsActive = customer.IsActive,
+            CreatedDate = customer.CreatedDate,
+            Phone = customer.Phone,
+            Address = customer.Address,
+            City = customer.City,
+        };
+
+        return Result<CustomerResponse>.Success(response);
     }
 }

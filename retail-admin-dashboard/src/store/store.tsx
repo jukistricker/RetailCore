@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import accountReducer from './slices/accountSlice';
 import productReducer from './slices/productSlice';
-import userReducer from './slices/userSlice';
+import customerReducer from './slices/customerSlice';
 import orderReducer from './slices/orderSlice';
 import categoryReducer from './slices/categorySlice';
 import reviewReducer from './slices/reviewSlice';
@@ -10,7 +10,7 @@ export const store = configureStore({
   reducer: {
     account: accountReducer,
     product: productReducer,
-    user: userReducer,
+    customer: customerReducer,
     order: orderReducer,
     category: categoryReducer,
     review: reviewReducer,

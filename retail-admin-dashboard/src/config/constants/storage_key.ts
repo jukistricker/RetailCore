@@ -1,2 +1,2 @@
-export const USER_KEY = "user";
+export const USER_KEY = "account";
 export const THEME_KEY = "theme";

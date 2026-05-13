@@ -19,7 +19,7 @@ out/
 # React / Vite / Node.js
 # ==========================================
 node_modules/
-dist/
+retail-admin-dashboard/dist/
 dist-ssr/
 *.local
 .eslintcache
@@ -49,3 +49,9 @@ desktop.ini
 *.swp
 *.bak
 *.tmp
+
+# ==========================================
+# Test Results
+# ==========================================
+**/TestResults/
+**/coverage-report/

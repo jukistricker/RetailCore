@@ -22,7 +22,8 @@ public static class ProductMapping
             Name = product.Name,
             Slug = product.Slug,
             Price = product.Price,
-            ThumbnailUrl = product.ThumbnailUrl
+            ThumbnailUrl = product.ThumbnailUrl,
+            Stock = product.Stock
         };
     }
 

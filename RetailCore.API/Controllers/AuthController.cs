@@ -1,6 +1,7 @@
 namespace RetailCore.API.Controllers;
 
 [Route("api/auth")]
+[Authorize]
 public class AuthController : ApiControllerBase
 {
     private readonly IAuthService _authService;
@@ -10,6 +11,7 @@ public class AuthController : ApiControllerBase
         _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -17,6 +19,7 @@ public class AuthController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
@@ -24,10 +27,21 @@ public class AuthController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
         return HandleResult(await _authService.LogoutAsync());
+    }
+    
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken()
+    {
+        return HandleResult(await _authService.RefreshTokenAsync());
+    }
+    
+    [HttpGet("details")]
+    public async Task<IActionResult> GetCurrentDetails()
+    {
+        return HandleResult(await _authService.GetCurrentDetailsAsync());
     }
 }

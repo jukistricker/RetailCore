@@ -2,20 +2,20 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../../store/store';
 import { fetchProducts } from '../../../store/thunks/productThunk';
-import { fetchUsers } from '../../../store/thunks/userThunk';
 import { fetchOrders } from '../../../store/thunks/orderThunk';
 import { fetchCategories } from '../../../store/thunks/categoryThunk';
 import { fetchReviews } from '../../../store/thunks/reviewThunk';
+import { fetchCustomers } from '../../../store/thunks/customerThunk';
 
 const AdminDashboard: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { items: products } = useSelector((state: RootState) => state.product);
-  const { items: users } = useSelector((state: RootState) => state.user);
+  const { items: customers } = useSelector((state: RootState) => state.customer);
   const { items: orders } = useSelector((state: RootState) => state.order);
   const { items: categories } = useSelector((state: RootState) => state.category);
   const { items: reviews } = useSelector((state: RootState) => state.review);
   useEffect(() => {
-    dispatch(fetchUsers({ pageNumber: 1, pageSize: 5 }));
+    dispatch(fetchCustomers({ pageNumber: 1, pageSize: 5 }));
     dispatch(fetchProducts({ pageNumber: 1, pageSize: 5 }));
     dispatch(fetchOrders({ page: 1, pageSize: 5 }));
     dispatch(fetchCategories({ pageNumber: 1, pageSize: 5 }));
@@ -39,7 +39,7 @@ const AdminDashboard: React.FC = () => {
           <div className="card border-0 shadow-sm">
             <div className="card-body">
               <h6 className="text-muted mb-1">Total Users</h6>
-              <h2 className="mb-0 text-success">{users.length}</h2>
+              <h2 className="mb-0 text-success">{customers.length}</h2>
             </div>
           </div>
         </div>

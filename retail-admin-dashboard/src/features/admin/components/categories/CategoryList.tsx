@@ -1,162 +1,136 @@
+// pages/admin/categories/CategoryListPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../../../store/store';
-import { fetchCategories, deleteCategory } from '../../../../store/thunks/categoryThunk';
+import { CategoryFormDialog } from './CategoryFormDialog';
+import { AppDispatch, RootState } from '../../../../store/store';
 import { Category } from '../../../../types/category';
-import toast from 'react-hot-toast';
-import CategoryFormDialog from './CategoryFormDialog';
-import CategoryDetailsDialog from './CategoryDetailsDialog';
+import { createCategory, deleteCategory, fetchCategories, updateCategory } from '../../../../store/thunks/categoryThunk';
 
-const CategoryList: React.FC = () => {
+export const CategoryList = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { items: categories, loading, error, currentPage } = useSelector(
-    (state: RootState) => state.category
-  );
+  const { items, loading, totalCount } = useSelector((state: RootState) => state.category);
   
-  const [showFormDialog, setShowFormDialog] = useState(false);
-  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const pageSize = 10;
+  const [params, setParams] = useState({ pageNumber: 1, pageSize: 10, search: '' });
+  const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Category | null>(null);
 
   useEffect(() => {
-    dispatch(fetchCategories({ page: currentPage, pageSize }));
-  }, [dispatch, currentPage]);
+    dispatch(fetchCategories(params));
+  }, [dispatch, params]);
 
-  const handleDelete = async (id: string | number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa danh mục này?')) {
-      const result = await dispatch(deleteCategory(id));
-      if (deleteCategory.fulfilled.match(result)) {
-        toast.success('Xóa danh mục thành công!');
-      }
+  const handleOpenCreate = () => {
+    setSelectedItem(null);
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (cat: Category) => {
+    setSelectedItem(cat);
+    setShowModal(true);
+  };
+
+  const handleSave = async (data: any) => {
+    if (selectedItem) {
+      await dispatch(updateCategory(data));
+    } else {
+      await dispatch(createCategory(data));
+    }
+    setShowModal(false);
+    dispatch(fetchCategories(params)); // Refresh lại danh sách
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa danh mục này?")) {
+      await dispatch(deleteCategory(id));
+      dispatch(fetchCategories(params));
     }
   };
 
-  const handleAddClick = () => {
-    setSelectedCategory(null);
-    setShowFormDialog(true);
-  };
-
-  const handleEditClick = (category: Category) => {
-    setSelectedCategory(category);
-    setShowFormDialog(true);
-  };
-
-  const handleViewClick = (category: Category) => {
-    setSelectedCategory(category);
-    setShowDetailsDialog(true);
-  };
-
-  const handleFormClose = () => {
-    setShowFormDialog(false);
-    setSelectedCategory(null);
-  };
-
-  const handleDetailsClose = () => {
-    setShowDetailsDialog(false);
-    setSelectedCategory(null);
-  };
-
   return (
-    <div className="container-fluid">
+    <div className="container-fluid p-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="fw-bold mb-0">Quản Lý Danh Mục</h1>
-        <button className="btn btn-success" onClick={handleAddClick}>
-          <i className="bi bi-plus-circle me-2"></i>Thêm Danh Mục
+        <div>
+          <h3 className="fw-bold mb-0">Quản Lý Danh Mục</h3>
+          <p className="text-muted small">Phân loại sản phẩm cho hệ thống của bạn</p>
+        </div>
+        <button className="btn btn-success shadow-sm" onClick={handleOpenCreate}>
+          <i className="bi bi-plus-lg me-2"></i>Thêm Danh Mục
         </button>
       </div>
 
-      {error && (
-        <div className="alert alert-danger" role="alert">
-          {error}
+      <div className="card border-0 shadow-sm rounded-3">
+        <div className="card-header py-3">
+          <div className="input-group" style={{ maxWidth: '350px' }}>
+            <span className="input-group-text  border-end-0">
+              <i className="bi bi-search text-muted"></i>
+            </span>
+            <input 
+              type="text" 
+              className="form-control  border-start-0" 
+              placeholder="Tìm kiếm danh mục..."
+              onChange={(e) => setParams({ ...params, search: e.target.value, pageNumber: 1 })}
+            />
+          </div>
         </div>
-      )}
 
-      <div className="card border-0 shadow-sm">
-        <div className="table-responsive">
-          <table className="table table-hover mb-0">
-            <thead className="bg-light">
-              <tr>
-                <th>STT</th>
-                <th>Tên Danh Mục</th>
-                <th>Mô Tả</th>
-                <th>Trạng Thái</th>
-                <th>Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table">
                 <tr>
-                  <td colSpan={5} className="text-center py-4">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                  </td>
+                  <th className="ps-4">Thứ tự</th>
+                  <th>Tên danh mục</th>
+                  <th>Mô tả</th>
+                  <th className="text-center">Hành động</th>
                 </tr>
-              ) : categories.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-4 text-muted">
-                    Không có danh mục nào
-                  </td>
-                </tr>
-              ) : (
-                categories.map((category, index) => (
-                  <tr key={category.id}>
-                    <td>{(currentPage - 1) * pageSize + index + 1}</td>
-                    <td>
-                      <strong>{category.name}</strong>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={4} className="text-center py-5"><div className="spinner-border text-success"></div></td></tr>
+                ) : items.map((cat) => (
+                  <tr key={cat.id}>
+                    <td className="ps-4 fw-bold text-muted">{cat.sortOrder}</td>
+                    <td><span className="fw-semibold">{cat.name}</span></td>
+                    <td className="text-muted text-truncate" style={{ maxWidth: '300px' }}>
+                      {cat.description || '---'}
                     </td>
-                    <td>{category.description || 'N/A'}</td>
-                    <td>
-                      <span className={`badge ${category.status === 'active' ? 'bg-success' : 'bg-danger'}`}>
-                        {category.status || 'active'}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-info me-2"
-                        onClick={() => handleViewClick(category)}
-                        title="Xem chi tiết"
-                      >
-                        <i className="bi bi-eye"></i>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-warning me-2"
-                        onClick={() => handleEditClick(category)}
-                        title="Chỉnh sửa"
-                      >
+                    <td className="text-center">
+                      <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleOpenEdit(cat)}>
                         <i className="bi bi-pencil"></i>
                       </button>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(category.id)}
-                        title="Xóa"
-                      >
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(cat.id)}>
                         <i className="bi bi-trash"></i>
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="card-footer  py-3 d-flex justify-content-between align-items-center">
+          <small className="text-muted">Tổng cộng: <strong>{totalCount}</strong> danh mục</small>
+          <nav>
+            <ul className="pagination pagination-sm mb-0">
+              <li className={`page-item ${params.pageNumber === 1 ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setParams({ ...params, pageNumber: params.pageNumber - 1 })}>Trước</button>
+              </li>
+              <li className="page-item active"><span className="page-link">{params.pageNumber}</span></li>
+              <li className={`page-item ${items.length < params.pageSize ? 'disabled' : ''}`}>
+                <button className="page-link" onClick={() => setParams({ ...params, pageNumber: params.pageNumber + 1 })}>Sau</button>
+              </li>
+            </ul>
+          </nav>
         </div>
       </div>
 
-      {showFormDialog && (
-        <CategoryFormDialog
-          category={selectedCategory}
-          onClose={handleFormClose}
-        />
-      )}
-
-      {showDetailsDialog && selectedCategory && (
-        <CategoryDetailsDialog
-          category={selectedCategory}
-          onClose={handleDetailsClose}
+      {showModal && (
+        <CategoryFormDialog 
+          category={selectedItem} 
+          onClose={() => setShowModal(false)} 
+          onSave={handleSave} 
         />
       )}
     </div>
   );
 };
-
-export default CategoryList;

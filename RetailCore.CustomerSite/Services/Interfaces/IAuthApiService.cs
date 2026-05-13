@@ -5,4 +5,6 @@ public interface IAuthApiService
     Task<Result<LoginResponse>> LoginAsync(LoginRequest request);
     Task<Result<bool>> RegisterAsync(RegisterRequest request);
     Task<Result<bool>> LogoutAsync();
+    Task<Result<LoginResponse>> RefreshTokenAsync();
+    Task<Result<CustomerResponse>> GetCurrentDetailsAsync();
 }

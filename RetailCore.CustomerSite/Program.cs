@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using RetailCore.CustomerSite.Middlewares;
 using RetailCore.CustomerSite.Services;
@@ -23,6 +25,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAuthApiService, AuthApiService>();
 builder.Services.AddScoped<IProductApiService, ProductApiService>();
 builder.Services.AddScoped<ICartItemApiService, CartItemApiService>();
+builder.Services.AddScoped<ICategoryApiService, CategoryApiService>();
+builder.Services.AddScoped<ICustomerApiService, CustomerApiService>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -32,29 +36,54 @@ builder.Services.AddAuthentication(options =>
     })
     .AddCookie(options =>
     {
+        options.Cookie.Name = "RetailCore.Identity";
         options.LoginPath = "/Auth/Login";
         options.LogoutPath = "/Auth/Logout";
         options.AccessDeniedPath = "/Auth/AccessDenied";
-        options.LoginPath = "/Auth/Login";
-
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(600);
+    
         options.Events = new CookieAuthenticationEvents
         {
             OnValidatePrincipal = async context =>
             {
-                // Kiểm tra xem có X-Access-Token không
                 var token = context.HttpContext.Request.Cookies["X-Access-Token"];
-                if (string.IsNullOrEmpty(token)) context.RejectPrincipal();
-            }
-        };
 
-        // Quan trọng: Tự động chuyển hướng khi bị Challenge
-        options.Events.OnRedirectToLogin = context =>
-        {
-            if (IsAjaxRequest(context.Request))
-                context.Response.StatusCode = 401;
-            else
-                context.Response.Redirect(context.RedirectUri);
-            return Task.CompletedTask;
+                if (string.IsNullOrEmpty(token))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return;
+                }
+
+                try 
+                {
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadJwtToken(token);
+        
+                    if (jwtToken.ValidTo < DateTime.UtcNow)
+                    {
+                        context.RejectPrincipal();
+                        await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    }
+                }
+                catch
+                {
+                    context.RejectPrincipal();
+                }
+            },
+            OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api") || 
+                    context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    context.Response.StatusCode = 401;
+                }
+                else
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 

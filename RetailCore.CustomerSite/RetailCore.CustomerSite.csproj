@@ -17,4 +17,8 @@
         <ProjectReference Include="..\RetailCore.Shared\RetailCore.Shared.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Views\Category\" />
+    </ItemGroup>
+
 </Project>
