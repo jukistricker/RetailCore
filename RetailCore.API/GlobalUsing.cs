@@ -1,0 +1,9 @@
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
+global using RetailCore.Application.UseCases.Interfaces;
+global using RetailCore.Shared.DTOs;
+global using RetailCore.Domain.Commons;
+global using RetailCore.Application.UseCases;
+global using RetailCore.Infrastructure.Data;
+global using RetailCore.Domain.Interfaces.Repositories;
+global using RetailCore.Infrastructure.Repositories;

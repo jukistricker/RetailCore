@@ -1,0 +1,46 @@
+@using System.Globalization
+@model ProductSummaryResponse
+@inject IConfiguration Configuration
+
+@{
+    var imageBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "";
+    var fullImageUrl = string.IsNullOrEmpty(Model.ThumbnailUrl)
+        ? "/images/no-image.png"
+        : Model.ThumbnailUrl.StartsWith("http")
+            ? Model.ThumbnailUrl
+            : $"{imageBaseUrl}{Model.ThumbnailUrl}";
+}
+
+<div class="card product-card shadow-sm border-0 transition-hover">
+    @* Ảnh sản phẩm *@
+    <div class="position-relative overflow-hidden" style="padding-top: 100%;">
+        <a asp-controller="Product" asp-action="Detail" asp-route-id="@Model.Id">
+            <img src="@(fullImageUrl)"
+                 class="card-img-top position-absolute top-0 start-0 w-100 h-100"
+                 style="object-fit: cover;"
+                 alt="@Model.Name">
+        </a>
+    </div>
+
+    <div class="card-body d-flex flex-column">
+        @* Tên sản phẩm *@
+        <h5 class="card-title text-truncate-2" style="height: 3rem; font-size: 1rem;">
+            <a asp-controller="Product" asp-action="Detail" asp-route-id="@Model.Id"
+               class="text-decoration-none text-color fw-bold">
+                @Model.Name
+            </a>
+        </h5>
+
+        @* Giá - Dùng biến CSS để đổi màu theo theme *@
+        <p class="card-text text-danger fs-5 fw-bold mb-3">
+            @Model.Price.ToString("C0", new CultureInfo("vi-VN"))
+        </p>
+
+        <div class="mt-auto">
+            <a asp-controller="Product" asp-action="Detail" asp-route-id="@Model.Id"
+               class="btn btn-primary-custom w-100 rounded-pill">
+                Buy Now
+            </a>
+        </div>
+    </div>
+</div>

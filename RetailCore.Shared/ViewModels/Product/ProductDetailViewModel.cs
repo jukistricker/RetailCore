@@ -23,5 +23,5 @@ public class RatingViewModel
     public string CustomerName { get; set; } = string.Empty;
     public byte Rating { get; set; }
     public string? Review { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedDate { get; set; }
 }

@@ -1,0 +1,228 @@
+@using System.Globalization
+@model ProductDetailResponse
+@inject IConfiguration Configuration
+
+@{
+    ViewData["Title"] = Model.Name;
+    var imageBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "";
+    var mainImage = Model.Images.FirstOrDefault()?.Url;
+    var fullMainImageUrl = string.IsNullOrEmpty(mainImage)
+        ? "/images/no-image.png"
+        : mainImage.StartsWith("http") ? mainImage : $"{imageBaseUrl}{mainImage}";
+}
+
+<div class="container my-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index"><i class="bi bi-house"></i> Home
+                    Page</a></li>
+        </ol>
+    </nav>
+
+    <div class="row g-5">
+        <div class="col-md-6">
+            <div class="product-gallery">
+                <div class="main-image-wrapper mb-3 shadow-sm rounded bg-light">
+                    <img id="mainImage" src="@fullMainImageUrl" alt="@Model.Name">
+                </div>
+
+                <div class="thumbnail-list d-flex gap-2 overflow-auto pb-2">
+                    @foreach (var img in Model.Images)
+                    {
+                        var thumbUrl = img.Url.StartsWith("http") ? img.Url : $"{imageBaseUrl}{img.Url}";
+                        <div class="thumb-wrapper">
+                            <img src="@thumbUrl" class="img-thumbnail thumb-item" onclick="changeMainImage('@thumbUrl')"
+                                 alt="@img.AltText">
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <h1 class="display-6 fw-bold mb-3" style="color: var(--text-color);">@Model.Name</h1>
+
+            <div class="d-flex align-items-center mb-3">
+                <span class="badge bg-primary me-2">@Model.CategoryName</span>
+                <span class="text-muted">Status: @(Model.Stock > 0 ? "Available" : "Sold out") (@Model.Stock)</span>
+            </div>
+
+            <h2 class="text-danger fw-bold mb-4">
+                @Model.Price.ToString("C0", new CultureInfo("en-Us"))
+            </h2>
+
+            <div class="description mb-4 p-3 rounded"
+                 style="background-color: var(--search-bg); color: var(--text-color);">
+                <h5 class="fw-bold">Product Description</h5>
+                <p>@Html.Raw(Model.Description ?? "No Description.")</p>
+            </div>
+
+            @if (Model.Attributes != null && Model.Attributes.Any())
+            {
+                <div class="product-selection mb-4">
+                    @{ var firstAttr = Model.Attributes.FirstOrDefault(); }
+                    @if (firstAttr != null)
+                    {
+                        <div class="mb-4">
+                            <label class="fw-bold d-block mb-2 text-uppercase small">@firstAttr.AttributeName</label>
+                            <div class="d-flex gap-2 flex-wrap" id="tier1-container">
+                                @foreach (var attr in Model.Attributes)
+                                {
+                                    <button type="button" class="btn btn-outline-secondary attr-btn tier1-btn"
+                                            data-id="@attr.Id" onclick="selectTier1(this)">
+                                        @attr.Value
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div id="tier2-wrapper" class="mb-4 d-none">
+                        <label class="fw-bold d-block mb-2 text-uppercase small" id="tier2-label">Attributes</label>
+                        <div class="d-flex gap-2 flex-wrap" id="tier2-container"></div>
+                    </div>
+                </div>
+            }
+
+            <div class="action-buttons d-grid gap-2">
+                <button id="btn-add-to-cart" class="btn btn-primary btn-lg rounded-pill shadow-sm" disabled>
+                    <i class="bi bi-cart-plus me-2"></i>Select Attributes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const attributesData = @Html.Raw(Json.Serialize(Model.Attributes));
+    let selectedTier1Id = null;
+    let selectedTier2Id = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Nếu không có thuộc tính nào để chọn, mở nút luôn
+        if (!attributesData || attributesData.length === 0) {
+            enableAddToCart();
+        }
+    });
+
+    function selectTier1(element) {
+        document.querySelectorAll('.tier1-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+
+        const attrId = element.getAttribute('data-id');
+        selectedTier1Id = attrId;
+        selectedTier2Id = null; // Reset tier 2 khi chọn lại tier 1
+
+        const selectedAttr = attributesData.find(a => a.id === attrId);
+        const tier2Container = document.getElementById('tier2-container');
+        const tier2Wrapper = document.getElementById('tier2-wrapper');
+        const tier2Label = document.getElementById('tier2-label');
+
+        if (selectedAttr && selectedAttr.childAttributes && selectedAttr.childAttributes.length > 0) {
+            tier2Label.innerText = selectedAttr.childAttributes[0].attributeName;
+            tier2Container.innerHTML = selectedAttr.childAttributes.map(child => `
+                <button type="button" class="btn btn-outline-secondary attr-btn tier2-btn" 
+                        data-id="${child.id}" onclick="selectTier2(this)">
+                    ${child.value}
+                </button>
+            `).join('');
+
+            tier2Wrapper.classList.remove('d-none');
+            const btn = document.getElementById('btn-add-to-cart');
+            btn.innerText = "Please select " + selectedAttr.childAttributes[0].attributeName;
+            btn.disabled = true;
+        } else {
+            tier2Wrapper.classList.add('d-none');
+            enableAddToCart();
+        }
+    }
+
+    function selectTier2(element) {
+        document.querySelectorAll('.tier2-btn').forEach(btn => btn.classList.remove('active'));
+        element.classList.add('active');
+        selectedTier2Id = element.getAttribute('data-id');
+        enableAddToCart();
+    }
+
+    function enableAddToCart() {
+        const btn = document.getElementById('btn-add-to-cart');
+        btn.innerText = "Add to cart";
+        btn.disabled = false;
+
+        if (@Model.Stock <= 0) {
+            btn.innerText = "Sold out";
+            btn.disabled = true;
+        }
+    }
+
+    async function handleAddToCart() {
+        const btn = document.getElementById('btn-add-to-cart');
+        const payload = {
+            productId: "@Model.Id",
+            productAttributeId: selectedTier2Id || selectedTier1Id || null,
+            quantity: 1
+        };
+
+        try {
+            const response = await fetch('/Cart/Add/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+
+            if (response.status === 204 || response.ok) {
+                showToast("Added to cart!");
+                return;
+            }
+
+            const result = await response.json();
+            let errorMsg = "An error occurred";
+
+            if (result.errors && result.errors.length > 0) {
+                errorMsg = result.errors[0].message; 
+            }
+
+            showToast(errorMsg, 'error');
+
+        } catch (error) {
+            console.error("Error:", error);
+            showToast("Lỗi kết nối hệ thống", 'error');
+        }
+    }
+    function changeMainImage(url) {
+        document.getElementById('mainImage').src = url;
+    }
+
+    function showToast(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast-msg toast-${type}`;
+        toast.innerText = message;
+
+        container.appendChild(toast);
+
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 400);
+        }, 3000);
+    }
+    document.getElementById('btn-add-to-cart').addEventListener('click', handleAddToCart);
+</script>
